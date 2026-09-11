@@ -376,8 +376,8 @@ function renderPublicDonation(data) {
     number: data?.momo_number || '',
     network: data?.momo_network || 'MTN',
     account_name: data?.momo_account_name || '',
-    title: data?.donation_title || 'Partner & Support This Conference',
-    note: data?.donation_note || 'Registration is 100% free. Voluntary donations support conference logistics, materials, and community outreach.',
+    title: data?.donation_title || 'Support This Conference',
+    note: data?.donation_note || '',
   };
 
   // Fallback if DB columns haven't been migrated yet and data is packed in daily_time
@@ -402,8 +402,8 @@ function renderPublicDonation(data) {
   const cleanNumber = momoData.number.trim();
   const cleanNetwork = momoData.network?.trim() || 'MTN';
   const cleanName = momoData.account_name?.trim() || '';
-  const cleanTitle = momoData.title?.trim() || 'Partner & Support This Conference';
-  const cleanNote = momoData.note?.trim() || 'Registration is 100% Free. Voluntary contributions support the event.';
+  const cleanTitle = momoData.title?.trim() || 'Support This Conference';
+  const cleanNote = momoData.note?.trim() || '';
 
   const networkLabels = {
     'MTN': 'MTN MoMo',
@@ -425,13 +425,21 @@ function renderPublicDonation(data) {
     }
 
     const nameEl = document.getElementById('donor-momo-name');
-    if (nameEl) nameEl.textContent = cleanName || 'Official Conference Account';
+    if (nameEl) nameEl.textContent = cleanName ? `(${cleanName})` : '';
 
     const numEl = document.getElementById('donor-momo-number');
     if (numEl) numEl.textContent = cleanNumber;
 
     const noteEl = document.getElementById('donor-momo-note');
-    if (noteEl) noteEl.textContent = cleanNote;
+    const noteWrap = document.getElementById('donor-momo-note-wrap');
+    if (noteEl && noteWrap) {
+      if (cleanNote) {
+        noteEl.textContent = cleanNote;
+        noteWrap.style.display = 'flex';
+      } else {
+        noteWrap.style.display = 'none';
+      }
+    }
 
     const copyBtn = document.getElementById('btn-copy-momo');
     if (copyBtn && !copyBtn.dataset.bound) {

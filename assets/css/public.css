@@ -592,85 +592,73 @@
 /* ============================================================
    VOLUNTARY DONOR / MOMO SUPPORT CARD
    ============================================================ */
+/* ============================================================
+   VOLUNTARY DONOR / MOMO SUPPORT CARD (COMPACT & NEAT)
+   ============================================================ */
 .momo-support-card {
-  margin: 22px 0 16px;
-  background: linear-gradient(145deg, #FFFDF5 0%, #FEF9C3 40%, #FEF08A 100%);
-  border: 1.5px solid #FDE047;
-  border-radius: 16px;
-  padding: 20px 22px;
-  box-shadow: 0 10px 25px -5px rgba(234, 179, 8, 0.18), 0 4px 10px rgba(15, 23, 42, 0.03);
+  margin: 16px 0 14px;
+  background: linear-gradient(135deg, #FFFDF7 0%, #FEF9C3 100%);
+  border: 1px solid #FDE047;
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.08);
   position: relative;
-  overflow: hidden;
-  transition: all 0.25s ease;
-}
-
-.momo-support-card::before {
-  content: '';
-  position: absolute;
-  top: -30px;
-  right: -30px;
-  width: 90px;
-  height: 90px;
-  background: radial-gradient(circle, rgba(234, 179, 8, 0.15) 0%, transparent 70%);
-  border-radius: 50%;
-  pointer-events: none;
+  transition: all 0.2s ease;
 }
 
 .momo-support-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
+  gap: 10px;
+  margin-bottom: 8px;
 }
 
 .momo-support-title-wrap {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: center;
+  gap: 8px;
 }
 
 .momo-support-heart {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
   background: #FEE2E2;
   color: #DC2626;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.15rem;
+  font-size: 0.95rem;
   flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.15);
 }
 
 .momo-support-title {
-  margin: 0 0 2px;
-  font-size: 1.05rem;
-  font-weight: 800;
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
   color: #78350F;
   letter-spacing: -0.01em;
 }
 
 .momo-support-subtitle {
-  margin: 0;
-  font-size: 0.82rem;
+  margin: 1px 0 0;
+  font-size: 0.74rem;
   color: #92400E;
-  line-height: 1.4;
+  line-height: 1.25;
   font-weight: 500;
 }
 
 .momo-network-badge {
   background: #0F172A;
   color: #FDE047;
-  font-weight: 800;
-  font-size: 0.72rem;
-  padding: 4px 10px;
-  border-radius: 8px;
-  letter-spacing: 0.04em;
+  font-weight: 700;
+  font-size: 0.68rem;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   flex-shrink: 0;
-  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.15);
 }
 
 .momo-network-badge[data-network="telecel"] {
@@ -685,26 +673,24 @@
 
 .momo-number-box {
   background: #FFFFFF;
-  border: 1.5px solid #FDE68A;
-  border-radius: 12px;
-  padding: 12px 16px;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 8px rgba(120, 53, 15, 0.05);
+  border: 1px solid #FDE68A;
+  border-radius: 9px;
+  padding: 8px 12px;
+  margin-bottom: 0;
+  box-shadow: 0 1px 4px rgba(120, 53, 15, 0.04);
 }
 
 .momo-number-meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 4px;
-  font-size: 0.78rem;
+  margin-bottom: 3px;
+  font-size: 0.74rem;
 }
 
 .momo-meta-label {
   color: #A16207;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
 }
 
 .momo-meta-name {
@@ -716,37 +702,35 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .momo-number-display {
   font-family: 'JetBrains Mono', 'Courier New', monospace;
-  font-size: 1.35rem;
+  font-size: 1.18rem;
   font-weight: 800;
   color: #0F172A;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
 }
 
 .btn-copy-momo {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   background: #F59E0B;
   color: #FFFFFF;
   border: none;
-  padding: 7px 14px;
-  border-radius: 8px;
-  font-size: 0.82rem;
+  padding: 5px 11px;
+  border-radius: 7px;
+  font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35);
+  flex-shrink: 0;
 }
 
 .btn-copy-momo:hover {
   background: #D97706;
-  transform: translateY(-1px);
 }
 
 .btn-copy-momo.copied {
@@ -757,11 +741,11 @@
 .momo-instructions-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.78rem;
+  gap: 6px;
+  font-size: 0.72rem;
   color: #854D0E;
-  line-height: 1.35;
-  padding: 0 4px;
+  margin-top: 6px;
+  padding: 0 2px;
 }
 
 .momo-instructions-row i {
@@ -1159,34 +1143,42 @@
 
 @media (max-width: 540px) {
   .momo-support-card {
-    padding: 14px 12px;
-    border-radius: 13px;
-    margin: 18px 0 14px;
+    padding: 10px 12px;
+    border-radius: 11px;
+    margin: 12px 0 14px;
   }
   .momo-support-heart {
-    width: 32px;
-    height: 32px;
-    font-size: 1rem;
-    border-radius: 8px;
+    width: 26px;
+    height: 26px;
+    font-size: 0.88rem;
+    border-radius: 6px;
   }
   .momo-support-title {
     font-size: 0.88rem;
   }
+  .momo-support-subtitle {
+    font-size: 0.72rem;
+  }
+  .momo-number-box {
+    padding: 7px 10px;
+    border-radius: 8px;
+  }
   .momo-digits-row {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
     gap: 8px;
   }
   .momo-number-display {
-    font-size: 1.15rem;
-    text-align: center;
-    padding: 6px 10px;
+    font-size: 1.05rem;
+    text-align: left;
+    padding: 0;
   }
   .btn-copy-momo {
-    width: 100%;
-    justify-content: center;
-    padding: 8px;
-    border-radius: 9px;
+    width: auto;
+    padding: 5px 10px;
+    border-radius: 7px;
+    font-size: 0.74rem;
   }
   .pass-momo-content {
     flex-direction: column;
