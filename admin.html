@@ -881,11 +881,11 @@
         </div>
       </section>
 
-      <!-- Admin Footer -->
-      <footer class="app-footer" style="margin-top: auto; border-radius: 14px; border: 1px solid var(--color-line); background: #FFFFFF;">
+      <!-- Admin Footer (matching registration page) -->
+      <footer class="app-footer app-footer--dark" style="margin-top: 40px; border-radius: 14px;">
         <div class="app-footer__inner" style="max-width: 100%;">
           <p class="app-footer__copy">
-            &copy; <span class="footer-year"></span> Conference Management System. All rights reserved.
+            &copy; <span class="footer-year" id="footer-year"></span> Conference Management System. All rights reserved.
           </p>
           
           <div class="app-footer__developer">
@@ -1201,8 +1201,8 @@
         <span>OFFICIAL CONFERENCE REGISTRATION</span>
       </div>
 
-      <h1 class="poster-title" id="poster-conf-name">Annual Church Conference</h1>
-      <p class="poster-theme" id="poster-conf-theme">“Walking in Supernatural Favor”</p>
+      <h1 class="poster-title" id="poster-conf-name">Annual Conference</h1>
+      <p class="poster-theme" id="poster-conf-theme" style="display: none;"></p>
 
       <div class="poster-qr-frame">
         <canvas id="poster-qr-canvas" width="280" height="280"></canvas>
@@ -1228,7 +1228,7 @@
           <i class="bi bi-geo-alt-fill"></i>
           <div>
             <strong>CONFERENCE VENUE</strong>
-            <span id="poster-conf-venue">Main Auditorium</span>
+            <span id="poster-conf-venue">Venue to be announced</span>
           </div>
         </div>
       </div>
