@@ -1,0 +1,1245 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Admin Dashboard — Conference Management System</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/admin.css" />
+</head>
+<body class="admin-body">
+
+  <div class="admin-shell">
+
+    <!-- ============ Sidebar ============ -->
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar__brand">
+        <i class="bi bi-shield-shaded"></i>
+        <span>Conference Admin</span>
+      </div>
+      <nav class="admin-nav">
+        <button class="admin-nav__item admin-nav__item--active" data-view="dashboard">
+          <i class="bi bi-speedometer2"></i>
+          <span>Dashboard</span>
+        </button>
+        <button class="admin-nav__item" data-view="conference-info">
+          <i class="bi bi-calendar2-range-fill"></i>
+          <span>Conference Info</span>
+        </button>
+        <button class="admin-nav__item" data-view="speakers">
+          <i class="bi bi-mic-fill"></i>
+          <span>Speakers</span>
+        </button>
+        <button class="admin-nav__item" data-view="registrants">
+          <i class="bi bi-people-fill"></i>
+          <span>Registrants</span>
+        </button>
+        <button class="admin-nav__item" data-view="invite">
+          <i class="bi bi-envelope-paper-heart-fill"></i>
+          <span>Invite Contacts</span>
+        </button>
+        <button class="admin-nav__item" data-view="campaigns">
+          <i class="bi bi-chat-left-dots-fill"></i>
+          <span>SMS Campaigns</span>
+        </button>
+        <button class="admin-nav__item" data-view="gateway">
+          <i class="bi bi-hdd-network-fill"></i>
+          <span>SMS Gateway</span>
+        </button>
+        <button class="admin-nav__item" data-view="users">
+          <i class="bi bi-person-gear"></i>
+          <span>Manage Users</span>
+        </button>
+      </nav>
+      <button class="admin-nav__item admin-nav__item--logout" id="logout-btn">
+        <i class="bi bi-box-arrow-right"></i>
+        <span>Sign out</span>
+      </button>
+    </aside>
+
+    <!-- ============ Mobile Top App Bar ============ -->
+    <div class="admin-mobilebar">
+      <div class="d-flex align-items-center gap-2">
+        <button id="mobile-menu-btn" aria-label="Open menu">
+          <i class="bi bi-list"></i>
+        </button>
+        <span id="mobile-title" style="font-weight: 700;">Dashboard</span>
+      </div>
+      <a href="./index.html" target="_blank" class="btn btn--outline btn--sm" style="color: #FFFFFF; border-color: rgba(255,255,255,0.2);">
+        <i class="bi bi-box-arrow-up-right"></i>
+      </a>
+    </div>
+
+    <!-- ============ Main Content ============ -->
+    <main class="admin-main">
+
+      <!-- DASHBOARD VIEW -->
+      <section class="admin-view admin-view--active" id="view-dashboard">
+        <div class="admin-view-header">
+          <h1>Dashboard Overview</h1>
+          <div class="d-flex gap-2">
+            <button class="btn btn--outline btn--sm" id="refresh-dashboard-btn" type="button" title="Refresh Dashboard Data">
+              <i class="bi bi-arrow-clockwise"></i>
+              <span>Refresh</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Stat Cards with initial Skeleton Shimmer -->
+        <div class="stat-grid" id="stat-grid">
+          <div class="stat-card skeleton-card">
+            <div class="skeleton skeleton-text" style="width: 50%;"></div>
+            <div class="skeleton skeleton-title" style="height: 2.2rem; width: 35%;"></div>
+          </div>
+          <div class="stat-card skeleton-card">
+            <div class="skeleton skeleton-text" style="width: 50%;"></div>
+            <div class="skeleton skeleton-title" style="height: 2.2rem; width: 35%;"></div>
+          </div>
+          <div class="stat-card skeleton-card">
+            <div class="skeleton skeleton-text" style="width: 50%;"></div>
+            <div class="skeleton skeleton-title" style="height: 2.2rem; width: 35%;"></div>
+          </div>
+          <div class="stat-card skeleton-card">
+            <div class="skeleton skeleton-text" style="width: 50%;"></div>
+            <div class="skeleton skeleton-title" style="height: 2.2rem; width: 35%;"></div>
+          </div>
+        </div>
+
+        <div class="panel-row">
+          <div class="panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <h2 style="margin: 0;"><i class="bi bi-graph-up"></i> Registration Trend (Last 14 days)</h2>
+              <span id="trend-total-badge" class="badge" style="background: #EFF6FF; color: #2563EB; font-weight: 700; border: 1px solid #BFDBFE; padding: 4px 10px; border-radius: 999px; font-size: 0.82rem;">0 registered</span>
+            </div>
+            <div class="chart-container" style="position: relative; width: 100%;">
+              <canvas id="trend-chart" height="200" style="width: 100%; display: block;"></canvas>
+            </div>
+          </div>
+          <div class="panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <h2 style="margin: 0;"><i class="bi bi-clock-history"></i> Recent Check-ins</h2>
+              <span class="live-indicator" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 600; color: #10B981;">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: #10B981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);"></span>
+                Live
+              </span>
+            </div>
+            <div id="recent-activity" class="activity-list">
+              <div class="skeleton skeleton-text" style="height: 1.6rem; margin-bottom: 8px;"></div>
+              <div class="skeleton skeleton-text" style="height: 1.6rem; margin-bottom: 8px;"></div>
+              <div class="skeleton skeleton-text" style="height: 1.6rem;"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CONFERENCE INFO VIEW -->
+      <section class="admin-view" id="view-conference-info">
+        <div class="admin-view-header">
+          <div>
+            <h1>Manage Conference Info</h1>
+            <p style="margin: 4px 0 0; color: #64748B; font-size: 0.92rem;">
+              Update public event branding, theme, venue, dates, flyer, and live broadcast channels in real time.
+            </p>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <form id="conference-form" class="panel">
+            
+            <div class="form-section-divider">
+              <i class="bi bi-info-circle-fill"></i>
+              <span>Core Event Identity</span>
+            </div>
+
+            <div class="field">
+              <label for="cf-name"><i class="bi bi-fonts text-primary"></i> Conference Name *</label>
+              <input id="cf-name" placeholder="e.g. Annual Holy Ghost Conference" required />
+            </div>
+
+            <div class="field">
+              <label for="cf-theme"><i class="bi bi-book-half text-primary"></i> Theme / Scripture Reference</label>
+              <input id="cf-theme" placeholder="e.g. Walking in Supernatural Favor (Isaiah 60:1)" />
+            </div>
+
+            <div class="form-section-divider">
+              <i class="bi bi-geo-alt-fill"></i>
+              <span>Location &amp; Schedule</span>
+            </div>
+
+            <div class="field">
+              <label for="cf-venue"><i class="bi bi-building text-primary"></i> Venue / Auditorium Location</label>
+              <input id="cf-venue" placeholder="e.g. Main Auditorium, Faith Cathedral, Accra" />
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="cf-start"><i class="bi bi-calendar-event text-primary"></i> Start Date</label>
+                <input type="date" id="cf-start" />
+              </div>
+              <div class="field">
+                <label for="cf-end"><i class="bi bi-calendar-check text-primary"></i> End Date</label>
+                <input type="date" id="cf-end" />
+                <div id="cf-date-error" style="display: none; font-size: 0.82rem; color: #DC2626; margin-top: 4px; font-weight: 500;">
+                  End date must be on or after start date.
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="cf-time"><i class="bi bi-clock-fill text-primary"></i> Daily Schedule Summary Banner</label>
+              <input id="cf-time" placeholder="e.g. Morning Sessions: 9:00 AM | Evening Revival: 6:00 PM" />
+              <div class="hint">Short schedule snippet displayed in the top banner of the website.</div>
+            </div>
+
+            <!-- Detailed Multi-Day Session Builder -->
+            <div class="form-section-divider" style="justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-calendar3-range-fill"></i>
+                <span>Program Schedule (Days &amp; Sessions)</span>
+              </div>
+              <button type="button" class="btn btn--outline btn--sm" id="cf-add-day-btn" style="padding: 4px 12px; font-size: 0.82rem;">
+                <i class="bi bi-plus-circle-fill text-primary"></i>
+                <span>Add Day</span>
+              </button>
+            </div>
+            
+            <p style="margin: -6px 0 12px; font-size: 0.84rem; color: #64748B;">
+              Add multiple conference days with their specific dates, themes, and breakout/keynote sessions.
+            </p>
+
+            <div id="cf-schedule-builder" style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 22px;">
+              <!-- Populated by conference-info.js -->
+            </div>
+
+            <div class="form-section-divider">
+              <i class="bi bi-card-text"></i>
+              <span>Event Overview &amp; Description</span>
+            </div>
+
+            <div class="field">
+              <label for="cf-desc"><i class="bi bi-text-paragraph text-primary"></i> Description</label>
+              <textarea id="cf-desc" rows="4" placeholder="Brief overview of the conference purpose, what attendees can expect, and spiritual focus..."></textarea>
+            </div>
+
+            <div class="form-section-divider">
+              <i class="bi bi-image-fill"></i>
+              <span>Banner Flyer &amp; Media</span>
+            </div>
+
+            <div class="field">
+              <label><i class="bi bi-file-earmark-image text-primary"></i> Event Flyer Banner</label>
+              <div class="file-upload-box" id="flyer-upload-box">
+                <input type="file" id="cf-flyer" accept="image/*" />
+                <i class="bi bi-cloud-arrow-up-fill" style="font-size: 2rem; color: #2563EB; display: block; margin-bottom: 6px;"></i>
+                <div style="font-weight: 600; color: #0F172A; font-size: 0.92rem;">Click or drag an image here to upload flyer</div>
+                <div style="font-size: 0.8rem; color: #64748B; margin-top: 4px;">Recommended: 1200×630 JPG, PNG or WebP (Max 5MB)</div>
+              </div>
+              
+              <div id="flyer-current-wrap" class="file-preview-box" style="display: none;">
+                <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                  <img id="flyer-current-img" src="" alt="Conference Flyer" />
+                  <div style="min-width: 0;">
+                    <div style="font-weight: 600; font-size: 0.88rem; color: #0F172A;" id="flyer-current-name">Flyer banner attached</div>
+                    <div style="font-size: 0.78rem; color: #10B981; display: inline-flex; align-items: center; gap: 4px;">
+                      <i class="bi bi-check-circle-fill"></i> Active on landing page
+                    </div>
+                  </div>
+                </div>
+                <button type="button" class="btn btn--outline btn--sm" id="cf-remove-flyer-btn" style="color: #DC2626; border-color: #FECACA;">
+                  <i class="bi bi-trash3"></i>
+                  <span>Remove</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-section-divider">
+              <i class="bi bi-broadcast"></i>
+              <span>Live Streaming Links</span>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="cf-fb"><i class="bi bi-facebook" style="color: #1877F2;"></i> Facebook Live Stream URL</label>
+                <input id="cf-fb" type="url" placeholder="https://facebook.com/church/live" />
+              </div>
+              <div class="field">
+                <label for="cf-yt"><i class="bi bi-youtube" style="color: #DC2626;"></i> YouTube Live Stream URL</label>
+                <input id="cf-yt" type="url" placeholder="https://youtube.com/@church/live" />
+              </div>
+            </div>
+
+            <div class="form-section-divider">
+              <i class="bi bi-heart-fill" style="color: #EF4444;"></i>
+              <span>Voluntary Offering &amp; MoMo Support Settings</span>
+            </div>
+
+            <p style="font-size: 0.85rem; color: #64748B; margin: 0 0 14px; line-height: 1.5;">
+              Allow attendees to voluntarily donate or partner with the conference via Mobile Money. Leave number blank to disable. Registration remains 100% free.
+            </p>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="cf-momo-network"><i class="bi bi-phone-fill text-primary"></i> Mobile Money Network</label>
+                <select id="cf-momo-network">
+                  <option value="MTN">MTN Mobile Money</option>
+                  <option value="Telecel">Telecel Cash (Vodafone)</option>
+                  <option value="AT">AT Money (AirtelTigo)</option>
+                  <option value="All">All Networks / Multi-Network</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="cf-momo-number"><i class="bi bi-wallet2 text-primary"></i> MoMo Number / Merchant ID</label>
+                <input id="cf-momo-number" type="tel" placeholder="e.g. 024 123 4567 or 123456" />
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="cf-momo-name"><i class="bi bi-person-badge-fill text-primary"></i> Account Name / Ministry Name</label>
+                <input id="cf-momo-name" type="text" placeholder="e.g. Grace Chapel International" />
+              </div>
+              <div class="field">
+                <label for="cf-momo-title"><i class="bi bi-heart text-danger"></i> Section Title</label>
+                <input id="cf-momo-title" type="text" placeholder="Partner &amp; Support This Conference" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="cf-momo-note"><i class="bi bi-chat-left-quote text-primary"></i> Giving Instructions / Reference</label>
+              <input id="cf-momo-note" type="text" placeholder="e.g. Use Reference: DONATION. Thank you for your support!" />
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--lg" id="cf-submit-btn" style="width: 100%; margin-top: 10px;">
+              <i class="bi bi-floppy-fill"></i>
+              <span>Save Conference Changes</span>
+            </button>
+          </form>
+
+          <!-- Live Preview Column -->
+          <div class="panel preview-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <h2 style="margin: 0;"><i class="bi bi-eye-fill"></i> Live Preview</h2>
+              <span class="badge" style="background: #EFF6FF; color: #2563EB; font-weight: 700; border: 1px solid #BFDBFE; padding: 4px 10px; border-radius: 999px; font-size: 0.78rem;">
+                Public Hero View
+              </span>
+            </div>
+            
+            <div id="cf-preview-container">
+              <!-- Dynamically populated by updatePreview() -->
+            </div>
+
+            <a href="./index.html" target="_blank" class="btn btn--outline btn--block" style="width: 100%; justify-content: center; gap: 8px;">
+              <i class="bi bi-box-arrow-up-right"></i>
+              <span>Open Public Registration Page</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- SPEAKERS VIEW -->
+      <section class="admin-view" id="view-speakers">
+        <div class="admin-view-header">
+          <h1>Manage Keynote Speakers</h1>
+          <button class="btn btn--primary" id="add-speaker-btn">
+            <i class="bi bi-plus-circle-fill"></i>
+            <span>Add Speaker</span>
+          </button>
+        </div>
+        <div class="speaker-panel">
+          <div class="speaker-admin-grid" id="speaker-admin-grid"></div>
+        </div>
+      </section>
+
+      <!-- REGISTRANTS VIEW -->
+      <section class="admin-view" id="view-registrants">
+        <div class="admin-view-header">
+          <h1>Registered Attendees</h1>
+          <div class="d-flex gap-2">
+            <button class="btn btn--outline" id="export-csv-btn">
+              <i class="bi bi-file-earmark-arrow-down-fill"></i>
+              <span>Export CSV</span>
+            </button>
+            <button class="btn btn--cta" id="manual-register-btn">
+              <i class="bi bi-person-plus-fill"></i>
+              <span>Manual Registration</span>
+            </button>
+          </div>
+        </div>
+        <div class="table-toolbar">
+          <input type="text" id="registrant-search" placeholder="Search name or phone…" />
+          <select id="filter-category">
+            <option value="">All Categories</option>
+            <option value="person">Individual / Group</option>
+            <option value="institution">Institution</option>
+            <option value="church">Church</option>
+          </select>
+          <select id="filter-checkin">
+            <option value="">All Check-in Status</option>
+            <option value="true">Checked In</option>
+            <option value="false">Not Checked In</option>
+          </select>
+          <select id="filter-first-time">
+            <option value="">First-Time: Any</option>
+            <option value="true">First-Time Only</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="registrants-table">
+            <thead>
+              <tr>
+                <th>Attendee Name</th><th>Category</th><th>Phone</th><th>Location</th>
+                <th>Invited By</th><th>First-time</th><th>Status</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="registrants-tbody">
+              <tr><td colspan="8"><div class="skeleton skeleton-text" style="height: 1.5rem;"></div></td></tr>
+              <tr><td colspan="8"><div class="skeleton skeleton-text" style="height: 1.5rem;"></div></td></tr>
+              <tr><td colspan="8"><div class="skeleton skeleton-text" style="height: 1.5rem;"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- INVITE CONTACTS VIEW -->
+      <!-- INVITE CONTACTS & REGISTRATION TOOLS VIEW -->
+      <section class="admin-view" id="view-invite">
+        <div class="admin-view-header">
+          <div>
+            <h1>Invite Contacts &amp; Registration Tools</h1>
+            <p class="hint" style="margin: 4px 0 0;">Manage bulk &amp; single SMS invitations, generate printable registration QR posters, and monitor registration conversion.</p>
+          </div>
+          <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn--outline btn--sm" id="export-contacts-csv-btn" type="button" title="Export contacts as CSV">
+              <i class="bi bi-filetype-csv text-primary"></i>
+              <span>Export CSV</span>
+            </button>
+            <button class="btn btn--outline btn--sm" id="export-contacts-excel-btn" type="button" title="Export contacts as Excel .xlsx">
+              <i class="bi bi-file-earmark-excel-fill" style="color: #10B981;"></i>
+              <span>Export Excel (.xlsx)</span>
+            </button>
+            <button class="btn btn--primary btn--sm" id="open-qr-poster-btn" type="button">
+              <i class="bi bi-qr-code-scan"></i>
+              <span>Print Registration QR Poster</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Metric Stat Cards -->
+        <div class="stat-grid" style="margin-bottom: 24px;">
+          <div class="stat-card">
+            <div class="d-flex align-items-center justify-content-between">
+              <span class="stat-card__label">Total Contacts Invited</span>
+              <div class="stat-icon" style="background: #EFF6FF; color: #2563EB;"><i class="bi bi-people-fill"></i></div>
+            </div>
+            <div class="stat-card__value" id="invite-stat-total">0</div>
+            <div class="stat-card__hint">Saved in invitation directory</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="d-flex align-items-center justify-content-between">
+              <span class="stat-card__label">SMS Invitations Sent</span>
+              <div class="stat-icon" style="background: #ECFDF5; color: #10B981;"><i class="bi bi-send-check-fill"></i></div>
+            </div>
+            <div class="stat-card__value" id="invite-stat-sent">0</div>
+            <div class="stat-card__hint">Dispatched through gateway</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="d-flex align-items-center justify-content-between">
+              <span class="stat-card__label">Registered from Invites</span>
+              <div class="stat-icon" style="background: #FAF5FF; color: #9333EA;"><i class="bi bi-person-check-fill"></i></div>
+            </div>
+            <div class="stat-card__value" id="invite-stat-converted">0</div>
+            <div class="stat-card__hint" id="invite-stat-rate">0% conversion rate</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="d-flex align-items-center justify-content-between">
+              <span class="stat-card__label">SMS Gateway Balance</span>
+              <div class="stat-icon" style="background: #FFFBEB; color: #F59E0B;"><i class="bi bi-wallet2"></i></div>
+            </div>
+            <div class="stat-card__value" id="invite-balance" style="font-size: 1.4rem;">Checking…</div>
+            <div class="stat-card__hint"><button type="button" class="btn btn--ghost btn--sm p-0" id="goto-gateway-btn" style="color: #2563EB; font-weight: 600; text-decoration: none; font-size: 0.8rem; background: none; border: none; cursor: pointer;">Configure Gateway &rarr;</button></div>
+          </div>
+        </div>
+
+        <!-- 2-Column Section: QR Code & Single Contact Add -->
+        <div class="panel-row" style="margin-bottom: 24px;">
+
+          <!-- Registration Link & Live QR Code Card -->
+          <div class="panel qr-card-panel" style="flex: 1; display: flex; flex-direction: column;">
+            <div class="panel-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+              <h2 style="margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-qr-code text-primary"></i> Registration Link &amp; QR Code
+              </h2>
+              <span class="badge" style="background: #EFF6FF; color: #2563EB; font-weight: 700; padding: 4px 10px; border-radius: 999px;">
+                Instant Scan
+              </span>
+            </div>
+
+            <p class="hint" style="margin: 0 0 16px; font-size: 0.88rem;">
+              Attendees can scan this QR code on flyers, banners, and church bulletins with their smartphone camera to open registration immediately.
+            </p>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center; margin-bottom: 16px; background: #F8FAFC; padding: 16px; border-radius: 14px; border: 1px solid #E2E8F0;">
+              <div style="background: #FFFFFF; padding: 10px; border-radius: 12px; box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08); border: 1px solid #E2E8F0; display: inline-flex; align-items: center; justify-content: center;">
+                <canvas id="reg-qr-canvas" width="180" height="180" style="width: 150px; height: 150px; display: block; border-radius: 6px;"></canvas>
+              </div>
+
+              <div style="flex: 1; min-width: 220px;">
+                <label style="font-size: 0.78rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 4px; display: block;">Public Registration URL</label>
+                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                  <input type="text" id="reg-url-input" readonly style="font-size: 0.84rem; background: #FFFFFF; font-family: monospace;" />
+                  <button type="button" class="btn btn--outline btn--sm" id="copy-reg-url-btn" title="Copy Registration URL" style="white-space: nowrap; padding: 0 12px;">
+                    <i class="bi bi-clipboard"></i> Copy
+                  </button>
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                  <button type="button" class="btn btn--outline btn--sm" id="download-qr-btn">
+                    <i class="bi bi-download"></i> Download PNG
+                  </button>
+                  <button type="button" class="btn btn--primary btn--sm" id="view-poster-btn">
+                    <i class="bi bi-printer-fill"></i> Print A4 Poster
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add Single Contact & Instant Invite Card -->
+          <div class="panel single-contact-panel" style="flex: 1;">
+            <div class="panel-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+              <h2 style="margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-person-plus-fill text-primary"></i> Add Single Contact &amp; Invite
+              </h2>
+              <span class="badge" style="background: #F1F5F9; color: #475569; font-weight: 600; padding: 4px 10px; border-radius: 999px;">
+                Direct SMS
+              </span>
+            </div>
+
+            <p class="hint" style="margin: 0 0 16px; font-size: 0.88rem;">
+              Enter a contact phone number (name is optional). You can save to directory or send the registration link immediately.
+            </p>
+
+            <form id="single-contact-form">
+              <div class="field-row">
+                <div class="field" style="margin-bottom: 12px;">
+                  <label for="single-contact-name">Contact Name (Optional)</label>
+                  <input type="text" id="single-contact-name" placeholder="Optional (e.g. Pastor David or leave empty)" />
+                </div>
+                <div class="field" style="margin-bottom: 12px;">
+                  <label for="single-contact-phone">Phone Number *</label>
+                  <input type="tel" id="single-contact-phone" placeholder="e.g. 0244123456 or +233..." required />
+                </div>
+              </div>
+
+              <div class="field" style="margin-bottom: 14px;">
+                <label for="single-contact-note">Batch / Source Tag (Optional)</label>
+                <input type="text" id="single-contact-note" placeholder="e.g. Ministers Outreach, Personal Invite" value="Direct Invite" />
+              </div>
+
+              <div class="btn-row" style="justify-content: flex-end; gap: 10px; margin-top: 6px;">
+                <button type="button" class="btn btn--outline" id="single-contact-save-only-btn">
+                  <i class="bi bi-save"></i>
+                  <span>Save to Contacts</span>
+                </button>
+                <button type="submit" class="btn btn--primary" id="single-contact-submit-btn">
+                  <i class="bi bi-send-fill"></i>
+                  <span>Save &amp; Send SMS Invite</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+        </div>
+
+        <!-- Bulk Upload & SMS Campaign Panel -->
+        <div class="panel" style="margin-bottom: 24px;">
+          <div class="panel-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <h2 style="margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-cloud-arrow-up-fill text-primary"></i> Bulk Contact Upload &amp; SMS Dispatcher
+              </h2>
+              <p class="hint" style="margin: 2px 0 0; font-size: 0.84rem;">Upload raw phone contacts (with or without names) using CSV or Excel (.xlsx, .xls).</p>
+            </div>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn--ghost btn--sm" id="download-sample-csv-btn" style="font-size: 0.8rem; color: #2563EB;">
+                <i class="bi bi-filetype-csv"></i> Sample CSV
+              </button>
+              <button type="button" class="btn btn--ghost btn--sm" id="download-sample-excel-btn" style="font-size: 0.8rem; color: #10B981;">
+                <i class="bi bi-file-earmark-excel"></i> Sample Excel (.xlsx)
+              </button>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="invite-file">Upload Contacts File (.csv, .xlsx, .xls, .txt) *</label>
+              <input type="file" id="invite-file" accept=".csv,.xlsx,.xls,.txt" />
+              <p class="hint" style="margin-top: 4px; font-size: 0.78rem;">Supports single column of phone numbers, or phone numbers with names.</p>
+            </div>
+            <div class="field">
+              <label for="invite-batch">Batch Label *</label>
+              <input type="text" id="invite-batch" placeholder="e.g. September Member Outreach" />
+            </div>
+          </div>
+
+          <!-- Parsed Contacts Preview Box -->
+          <div id="invite-preview" class="invite-preview" style="margin-bottom: 16px;"></div>
+
+          <div class="field">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <label for="invite-template" style="margin: 0;">Invitation SMS Template *</label>
+              <span id="sms-char-counter" style="font-size: 0.78rem; font-weight: 600; color: #64748B;">0 chars · 0 SMS</span>
+            </div>
+            <textarea id="invite-template" rows="3" placeholder="You're invited to our Annual Conference! Register here: [link]"></textarea>
+            <p class="hint" style="margin-top: 4px; font-size: 0.78rem;">The public registration link is automatically included for recipients to click and register.</p>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2" style="margin-top: 14px; border-top: 1px solid #E2E8F0; padding-top: 14px;">
+            <div style="font-size: 0.85rem; color: #475569; display: flex; align-items: center; gap: 6px;">
+              <i class="bi bi-shield-check text-primary"></i>
+              <span>All invited recipients who register are automatically enrolled for pre-event reminder broadcasts.</span>
+            </div>
+            <button class="btn btn--primary btn--lg" id="send-invites-btn" type="button">
+              <i class="bi bi-send-fill"></i>
+              <span>Send Bulk Invitations</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- All Invited Contacts Directory Table -->
+        <div class="panel" style="margin-bottom: 24px;">
+          <div class="panel-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <h2 style="margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-journal-bookmark-fill text-primary"></i> Invited Contacts Directory
+              </h2>
+              <p class="hint" style="margin: 2px 0 0; font-size: 0.85rem;">All individual and bulk uploaded contacts with real-time registration conversion tracking.</p>
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn btn--outline btn--sm" id="refresh-contacts-btn" type="button">
+                <i class="bi bi-arrow-clockwise"></i> Refresh Directory
+              </button>
+            </div>
+          </div>
+
+          <div class="table-toolbar">
+            <input type="text" id="contact-search" placeholder="Search name or phone number…" />
+            <select id="contact-filter-status">
+              <option value="">All Statuses</option>
+              <option value="converted">Registered / Converted Only</option>
+              <option value="pending">Pending Registration</option>
+              <option value="sms_sent">SMS Sent</option>
+              <option value="sms_pending">SMS Pending</option>
+            </select>
+            <select id="contact-filter-batch">
+              <option value="">All Batches</option>
+            </select>
+            <div class="d-flex gap-2 ms-auto">
+              <button class="btn btn--outline btn--sm" id="export-contacts-btn" type="button" title="Export to CSV">
+                <i class="bi bi-filetype-csv"></i> <span>Export CSV</span>
+              </button>
+              <button class="btn btn--outline btn--sm" id="export-contacts-excel-btn" type="button" title="Export to Excel">
+                <i class="bi bi-file-earmark-excel"></i> <span>Export Excel</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table" id="contacts-table">
+              <thead>
+                <tr>
+                  <th>Phone Number</th>
+                  <th>Contact Name</th>
+                  <th>Batch / Source</th>
+                  <th>SMS Delivery</th>
+                  <th>Registration Status</th>
+                  <th>Added Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="contacts-tbody">
+                <tr><td colspan="7"><div class="skeleton skeleton-text" style="height: 1.5rem;"></div></td></tr>
+                <tr><td colspan="7"><div class="skeleton skeleton-text" style="height: 1.5rem;"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center" style="margin-top: 14px; padding-top: 10px; border-top: 1px solid #E2E8F0;">
+            <span id="contacts-count-label" style="font-size: 0.85rem; color: #64748B; font-weight: 500;">Showing 0 contacts</span>
+          </div>
+        </div>
+
+        <!-- Past Batches & Registration Conversion -->
+        <div class="panel">
+          <h2><i class="bi bi-pie-chart-fill text-primary"></i> Batch Conversion Analytics</h2>
+          <p class="hint" style="margin: 0 0 14px;">Conversion tracking shows how many invited contacts in each batch completed their public registration.</p>
+          <div id="invite-batches"></div>
+        </div>
+
+      </section>
+
+      <!-- SMS CAMPAIGNS VIEW -->
+      <section class="admin-view" id="view-campaigns">
+        <div class="admin-view-header">
+          <h1>SMS Campaigns &amp; Notifications</h1>
+        </div>
+        <div class="campaign-grid" id="campaign-grid"></div>
+        <div class="panel">
+          <h2><i class="bi bi-journal-text"></i> SMS Broadcast Audit Log</h2>
+          <div class="table-wrap">
+            <table class="data-table" id="sms-log-table">
+              <thead><tr><th>Recipient Phone</th><th>Campaign Type</th><th>Delivery Status</th><th>Timestamp</th></tr></thead>
+              <tbody id="sms-log-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SMS GATEWAY SETTINGS VIEW -->
+      <section class="admin-view" id="view-gateway">
+        <div class="admin-view-header">
+          <h1>SMS Gateway Configuration</h1>
+        </div>
+
+        <div class="panel" style="margin-bottom: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+            <div>
+              <h2 style="margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-broadcast text-primary"></i> Active SMS Dispatcher
+              </h2>
+              <p class="hint" style="margin: 3px 0 0; font-size: 0.84rem;">
+                Connect any SMS gateway (Hubtel, Arkesel, Africa's Talking, mNotify, Twilio, or any custom SMS API).
+              </p>
+            </div>
+            <div id="gw-status-badge" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: #FEF3C7; color: #92400E; font-size: 0.8rem; font-weight: 700;">
+              <i class="bi bi-exclamation-circle-fill"></i> Not Configured
+            </div>
+          </div>
+
+          <form id="gateway-form">
+            <div class="field-row">
+              <div class="field">
+                <label for="gw-provider">SMS Service Provider *</label>
+                <select id="gw-provider" required>
+                  <option value="africastalking">Africa's Talking</option>
+                  <option value="arkesel">Arkesel SMS (Ghana)</option>
+                  <option value="hubtel">Hubtel SMS (Ghana)</option>
+                  <option value="mnotify">mNotify SMS (Ghana)</option>
+                  <option value="twilio">Twilio</option>
+                  <option value="vonage">Vonage (Nexmo)</option>
+                  <option value="custom">Custom SMS Gateway (Universal HTTP API)</option>
+                </select>
+                <span class="hint" id="gw-provider-hint" style="font-size: 0.78rem; margin-top: 4px; display: block;">
+                  Standard Africa's Talking REST API.
+                </span>
+              </div>
+
+              <div class="field">
+                <label for="gw-sender">Sender ID / Brand Name *</label>
+                <input id="gw-sender" placeholder="e.g. CHURCHCONF or LOGOS" maxlength="11" required />
+                <span class="hint" style="font-size: 0.78rem; margin-top: 4px; display: block;">
+                  Max 11 alphanumeric characters approved by your SMS provider.
+                </span>
+              </div>
+            </div>
+
+            <!-- Custom Provider Endpoint (shown when Custom is selected) -->
+            <div class="field" id="gw-endpoint-wrap" style="display: none;">
+              <label for="gw-endpoint">Custom API Gateway URL *</label>
+              <input type="url" id="gw-endpoint" placeholder="https://api.yourgateway.com/v1/sms/send?key={API_KEY}&to={TO}&msg={MESSAGE}&sender={SENDER_ID}" />
+              <span class="hint" style="font-size: 0.78rem; margin-top: 4px; display: block;">
+                Use placeholders: <code>{API_KEY}</code>, <code>{SENDER_ID}</code>, <code>{TO}</code>, and <code>{MESSAGE}</code>.
+              </span>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="gw-key" id="gw-key-label">API Key / Access Token *</label>
+                <div class="input-with-toggle">
+                  <input type="password" id="gw-key" placeholder="Enter provider API Key" required autocomplete="off" />
+                  <button type="button" class="toggle-visibility" data-target="gw-key" title="Toggle visibility"><i class="bi bi-eye"></i></button>
+                </div>
+              </div>
+
+              <div class="field" id="gw-secret-wrap">
+                <label for="gw-secret" id="gw-secret-label">API Secret / Username (Optional)</label>
+                <div class="input-with-toggle">
+                  <input type="password" id="gw-secret" placeholder="Username (for Africa's Talking) or Secret Key" autocomplete="off" />
+                  <button type="button" class="toggle-visibility" data-target="gw-secret" title="Toggle visibility"><i class="bi bi-eye"></i></button>
+                </div>
+              </div>
+            </div>
+
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+              <div>
+                <span style="font-size: 0.8rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.04em; display: block;">Estimated SMS Balance</span>
+                <strong id="gw-balance" style="font-size: 1.1rem; color: #0F172A;">—</strong>
+              </div>
+              <span style="font-size: 0.8rem; color: #64748B;">
+                <i class="bi bi-shield-lock-fill text-primary"></i> Credentials saved securely with instant activation.
+              </span>
+            </div>
+
+            <div class="btn-row" style="gap: 12px;">
+              <button type="button" class="btn btn--outline" id="gw-test-btn">
+                <i class="bi bi-send-check"></i>
+                <span>Send Test SMS</span>
+              </button>
+              <button type="submit" class="btn btn--primary" id="gw-save-btn">
+                <i class="bi bi-shield-check"></i>
+                <span>Save &amp; Activate Gateway</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel">
+          <h2><i class="bi bi-question-circle-fill text-primary"></i> Gateway Setup Quick Guide</h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 14px;">
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px;">
+              <strong style="color: #0F172A; display: block; margin-bottom: 4px;">Arkesel / Hubtel / mNotify</strong>
+              <p style="font-size: 0.84rem; color: #64748B; margin: 0;">
+                Select provider, enter your registered Sender ID (e.g. your Church Name), and paste your API Key from your provider dashboard.
+              </p>
+            </div>
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px;">
+              <strong style="color: #0F172A; display: block; margin-bottom: 4px;">Africa's Talking</strong>
+              <p style="font-size: 0.84rem; color: #64748B; margin: 0;">
+                Enter your registered Sender ID, your Africa's Talking API Key, and enter your Africa's Talking Username in the second field.
+              </p>
+            </div>
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px;">
+              <strong style="color: #0F172A; display: block; margin-bottom: 4px;">Any Custom Provider</strong>
+              <p style="font-size: 0.84rem; color: #64748B; margin: 0;">
+                Select "Custom SMS Gateway", paste their HTTP endpoint with query or body tokens, input your API Key and start sending instantly.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- USERS VIEW -->
+      <section class="admin-view" id="view-users">
+        <div class="admin-view-header">
+          <h1>Manage Usher Accounts</h1>
+        </div>
+        <div class="panel">
+          <h2><i class="bi bi-person-plus-fill"></i> Add Door Usher Account</h2>
+          <form id="add-usher-form" class="field-row">
+            <div class="field"><label for="usher-username-new">Usher Username</label><input id="usher-username-new" placeholder="e.g. usher_door1" /></div>
+            <div class="field"><label for="usher-password-new">Account Password</label><input type="password" id="usher-password-new" placeholder="Min 6 characters" /></div>
+            <div style="display: flex; align-items: flex-end; margin-bottom: 20px;">
+              <button type="submit" class="btn btn--primary btn--block">
+                <i class="bi bi-person-check-fill"></i>
+                <span>Create Usher Account</span>
+              </button>
+            </div>
+          </form>
+        </div>
+        <div class="panel">
+          <h2><i class="bi bi-people-fill"></i> Existing Ushers</h2>
+          <div class="table-wrap">
+            <table class="data-table" id="ushers-table">
+              <thead><tr><th>Username</th><th>Account Status</th><th>Created On</th><th>Manage</th></tr></thead>
+              <tbody id="ushers-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <h2 style="margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-clock-history text-primary"></i> Usher Door Check-in &amp; Activity Audit Log
+              </h2>
+              <p class="hint" style="margin: 2px 0 0; font-size: 0.84rem;">Real-time door activity records submitted by usher accounts at the entrance.</p>
+            </div>
+            <button class="btn btn--outline btn--sm" id="refresh-usher-activity-btn" type="button">
+              <i class="bi bi-arrow-clockwise"></i> Refresh Log
+            </button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="usher-activity-table">
+              <thead>
+                <tr>
+                  <th>Action</th>
+                  <th>Attendee / Group</th>
+                  <th>Headcount</th>
+                  <th>Affiliation / Details</th>
+                  <th>Logged At</th>
+                </tr>
+              </thead>
+              <tbody id="usher-activity-tbody">
+                <tr><td colspan="5" style="text-align: center; color: #94A3B8; padding: 20px;">Loading usher activity log…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Admin Footer -->
+      <footer class="app-footer" style="margin-top: auto; border-radius: 14px; border: 1px solid var(--color-line); background: #FFFFFF;">
+        <div class="app-footer__inner" style="max-width: 100%;">
+          <p class="app-footer__copy">
+            &copy; <span class="footer-year"></span> Conference Management System. All rights reserved.
+          </p>
+          
+          <div class="app-footer__developer">
+            <span class="developer-label">Designed &amp; Developed by</span>
+            <span class="developer-credit">
+              <span class="developer-name">StackWeb Developer</span>
+              <span class="developer-tagline">Smart System. Real Solutions.</span>
+            </span>
+          </div>
+        </div>
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- ============ Modals ============ -->
+  <dialog id="manual-register-modal" class="modal" style="max-width: 660px; width: 94%;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+      <div>
+        <h2 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+          <i class="bi bi-person-plus-fill text-primary"></i> 
+          <span>Manual Attendee Registration</span>
+        </h2>
+        <p style="margin: 4px 0 0; font-size: 0.86rem; color: #64748B;" id="manual-category-subtitle">
+          Register an individual attendee, organization, or church delegation.
+        </p>
+      </div>
+      <button type="button" class="btn btn--ghost btn--sm" id="manual-register-close-x" style="font-size: 1.25rem; padding: 4px 8px; color: #64748B;" aria-label="Close dialog">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button type="button" class="tab tab--active" data-category="person">
+        <i class="bi bi-person-fill"></i> <span>Individual</span>
+      </button>
+      <button type="button" class="tab" data-category="institution">
+        <i class="bi bi-building-fill"></i> <span>Institution</span>
+      </button>
+      <button type="button" class="tab" data-category="church">
+        <i class="bi bi-bank2"></i> <span>Church</span>
+      </button>
+    </div>
+
+    <form id="manual-register-form" class="reg-form" novalidate>
+      <input type="hidden" id="manual-category" value="person" />
+
+      <!-- INDIVIDUAL fields -->
+      <div class="reg-form__group" data-group="person">
+        <div class="field">
+          <label>
+            <span>Full Name</span>
+            <span class="field-required">* Required</span>
+          </label>
+          <div class="input-group-modern">
+            <span class="input-icon-badge"><i class="bi bi-person-fill"></i></span>
+            <input type="text" name="full_name" placeholder="e.g. Kwame Mensah" />
+          </div>
+          <span class="error">Please enter attendee's full name.</span>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="field">
+            <label>City / Location</label>
+            <div class="input-group-modern">
+              <span class="input-icon-badge"><i class="bi bi-geo-alt-fill"></i></span>
+              <input type="text" name="location" placeholder="e.g. Accra" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Church Affiliation</label>
+            <div class="input-group-modern">
+              <span class="input-icon-badge"><i class="bi bi-bank"></i></span>
+              <input type="text" name="church_affiliation" placeholder="e.g. Bethel Assembly" />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="field">
+            <label>
+              <span>Contact Phone</span>
+              <span class="field-required">* Required</span>
+            </label>
+            <div class="input-group-modern">
+              <span class="input-icon-badge"><i class="bi bi-telephone-fill"></i></span>
+              <input type="tel" name="contact_phone" placeholder="024 123 4567" />
+            </div>
+            <span class="error">Please enter a valid phone number.</span>
+          </div>
+          <div class="field">
+            <label>Invited By (Optional)</label>
+            <div class="input-group-modern">
+              <span class="input-icon-badge"><i class="bi bi-person-heart"></i></span>
+              <input type="text" name="invited_by" placeholder="Friend or inviter name" />
+            </div>
+          </div>
+        </div>
+
+        <!-- First Time Callout -->
+        <label class="welcome-gift-card" for="manual-person-first-time">
+          <input type="checkbox" id="manual-person-first-time" name="is_first_time" />
+          <div class="welcome-gift-text">
+            <div class="welcome-gift-title">
+              <i class="bi bi-gift-fill"></i>
+              <span>First time attending this conference?</span>
+            </div>
+            <p class="welcome-gift-desc">Prepares their complimentary gift package at the hospitality desk.</p>
+          </div>
+        </label>
+      </div>
+
+      <!-- INSTITUTION fields -->
+      <div class="reg-form__group" data-group="institution" hidden>
+        <div class="field">
+          <label>
+            <span>Institution / Organization Name</span>
+            <span class="field-required">* Required</span>
+          </label>
+          <div class="input-group-modern">
+            <span class="input-icon-badge"><i class="bi bi-building-fill"></i></span>
+            <input type="text" name="full_name" placeholder="e.g. Grace International Academy" />
+          </div>
+          <span class="error">Please enter institution name.</span>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="field">
+            <label>City / Location</label>
+            <div class="input-group-modern">
+              <span class="input-icon-badge"><i class="bi bi-geo-alt-fill"></i></span>
+              <input type="text" name="location" placeholder="e.g. Kumasi" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Members Attending</label>
+            <div class="input-group-modern">
+              <span class="input-icon-badge"><i class="bi bi-people-fill"></i></span>
+              <input type="number" name="number_of_members" min="1" placeholder="e.g. 15" />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="field">
+            <label>
+              <span>Contact Phone</span>
+              <span class="field-required">* Required</span>
+            </label>
+            <div class="input-group-modern">
+              <span class="input-icon-badge"><i class="bi bi-telephone-fill"></i></span>
+              <input type="tel" name="contact_phone" placeholder="024 123 4567" />
+            </div>
+            <span class="error">Please enter a valid phone number.</span>
+          </div>
+          <div class="field">
+            <label>Invited By (Optional)</label>
+            <div class="input-group-modern">
+              <span class="input-icon-badge"><i class="bi bi-person-heart"></i></span>
+              <input type="text" name="invited_by" placeholder="Coordinator or contact" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHURCH fields -->
+      <div class="reg-form__group" data-group="church" hidden>
+        <div class="field">
+          <label>
+            <span>Church Name</span>
+            <span class="field-required">* Required</span>
+          </label>
+          <div class="input-group-modern">
+            <span class="input-icon-badge"><i class="bi bi-bank2"></i></span>
+            <input type="text" name="full_name" placeholder="e.g. Victory Bible Church International" />
+          </div>
+          <span class="error">Please enter church name.</span>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="field">
+            <label>City / Location</label>
+            <div class="input-group-modern">
+              <span class="input-icon-badge"><i class="bi bi-geo-alt-fill"></i></span>
+              <input type="text" name="location" placeholder="e.g. Takoradi" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Delegation Size</label>
+            <div class="input-group-modern">
+              <span class="input-icon-badge"><i class="bi bi-people-fill"></i></span>
+              <input type="number" name="number_of_members" min="1" placeholder="e.g. 30" />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="field">
+            <label>
+              <span>Leader Contact Phone</span>
+              <span class="field-required">* Required</span>
+            </label>
+            <div class="input-group-modern">
+              <span class="input-icon-badge"><i class="bi bi-telephone-fill"></i></span>
+              <input type="tel" name="contact_phone" placeholder="024 123 4567" />
+            </div>
+            <span class="error">Please enter a valid phone number.</span>
+          </div>
+          <div class="field">
+            <label>Invited By (Optional)</label>
+            <div class="input-group-modern">
+              <span class="input-icon-badge"><i class="bi bi-person-heart"></i></span>
+              <input type="text" name="invited_by" placeholder="Host pastor or department" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin Instant Check-In & Attendance Option -->
+      <div style="margin: 12px 0 20px; background: #F0FDF4; border: 1.5px solid #BBF7D0; padding: 12px 16px; border-radius: 12px; display: flex; align-items: center; gap: 10px;">
+        <input type="checkbox" id="manual-checkin-now" checked style="width: 18px; height: 18px; accent-color: #10B981; cursor: pointer;" />
+        <label for="manual-checkin-now" style="font-weight: 600; font-size: 0.88rem; color: #166534; cursor: pointer; margin: 0; text-transform: none; letter-spacing: normal;">
+          <i class="bi bi-check-circle-fill" style="color: #10B981; margin-right: 4px;"></i>
+          Mark as Checked In immediately (Record for today's door attendance)
+        </label>
+      </div>
+
+      <div class="btn-row" style="margin-top: 14px;">
+        <button type="button" class="btn btn--ghost" id="manual-register-cancel">Cancel</button>
+        <button type="submit" class="btn btn--primary" id="manual-submit-btn">
+          <i class="bi bi-person-check-fill"></i>
+          <span>Register Attendee</span>
+        </button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="speaker-modal" class="modal" style="max-width: 520px; width: 92%;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <h2 id="speaker-modal-title" style="margin: 0;"><i class="bi bi-mic-fill text-primary"></i> Speaker Details</h2>
+      <button type="button" class="btn btn--ghost btn--sm modal__close-btn" id="speaker-close-x" aria-label="Close dialog">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <form id="speaker-form">
+      <input type="hidden" id="speaker-id" />
+      <div class="field"><label for="speaker-name">Full Name *</label><input id="speaker-name" required placeholder="Speaker full name" /></div>
+      <div class="field"><label for="speaker-title">Title / Ministry</label><input id="speaker-title" placeholder="Minister title or ministry" /></div>
+      <div class="field"><label for="speaker-bio">Short Bio</label><textarea id="speaker-bio" rows="3" placeholder="Brief ministry background and focus..."></textarea></div>
+
+      <!-- Speaker Photo Upload & Preview Section -->
+      <div class="field" style="margin-bottom: 16px;">
+        <label for="speaker-photo">Speaker Photo</label>
+        
+        <div id="speaker-photo-preview-wrap" style="display: none; align-items: center; gap: 14px; margin-bottom: 10px; padding: 10px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px;">
+          <img id="speaker-photo-preview" src="" alt="Speaker preview" style="width: 54px; height: 54px; border-radius: 50%; object-fit: cover; border: 2px solid #2563EB;" />
+          <div style="flex: 1; min-width: 0;">
+            <p id="speaker-photo-name" style="margin: 0; font-size: 0.85rem; font-weight: 600; color: #0F172A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Photo selected</p>
+            <button type="button" id="speaker-photo-remove-btn" class="btn btn--ghost btn--sm" style="padding: 2px 8px; font-size: 0.76rem; color: #DC2626; height: auto;">
+              <i class="bi bi-trash3"></i> Remove photo
+            </button>
+          </div>
+        </div>
+
+        <input type="file" id="speaker-photo" accept="image/*" />
+        <p class="hint" style="margin-top: 4px; font-size: 0.78rem;">Upload JPG, PNG, or WebP. Images are automatically optimized.</p>
+      </div>
+
+      <div class="field"><label for="speaker-order">Display Order</label><input type="number" id="speaker-order" value="0" /></div>
+      <div class="btn-row">
+        <button type="button" class="btn btn--ghost" id="speaker-cancel">Cancel</button>
+        <button type="submit" class="btn btn--primary" id="speaker-submit-btn">Save Speaker</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="confirm-send-modal" class="modal">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <h2 id="confirm-send-title" style="margin: 0;"><i class="bi bi-send-exclamation-fill text-warning"></i> Confirm SMS Dispatch</h2>
+      <button type="button" class="btn btn--ghost btn--sm modal__close-btn" id="confirm-send-close-x" aria-label="Close dialog">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <p id="confirm-send-body"></p>
+    <p class="hint">Type <strong>CONFIRM</strong> in the box below to authorize send.</p>
+    <div class="field">
+      <input type="text" id="confirm-send-input" placeholder="CONFIRM" />
+    </div>
+    <div class="btn-row">
+      <button type="button" class="btn btn--ghost" id="confirm-send-cancel">Cancel</button>
+      <button type="button" class="btn btn--primary" id="confirm-send-proceed" disabled>Send Broadcast</button>
+    </div>
+  </dialog>
+
+  <!-- ============ Printable QR Code Poster Dialog ============ -->
+  <dialog id="qr-poster-dialog" class="modal modal--poster">
+    <div class="poster-modal-actions no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #E2E8F0; padding-bottom: 12px;">
+      <div style="font-weight: 700; font-size: 1rem; color: #0F172A; display: flex; align-items: center; gap: 6px;">
+        <i class="bi bi-printer-fill text-primary"></i> Conference Registration QR Poster
+      </div>
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn--outline btn--sm" id="close-poster-dialog-btn">Close</button>
+        <button type="button" class="btn btn--primary btn--sm" id="print-poster-btn">
+          <i class="bi bi-printer"></i> Print Poster Now
+        </button>
+      </div>
+    </div>
+
+    <!-- The actual poster sheet that prints on A4/Letter -->
+    <div class="printable-poster-sheet" id="printable-poster-sheet">
+      <div class="poster-church-badge">
+        <i class="bi bi-bookmark-check-fill"></i>
+        <span>OFFICIAL CONFERENCE REGISTRATION</span>
+      </div>
+
+      <h1 class="poster-title" id="poster-conf-name">Annual Church Conference</h1>
+      <p class="poster-theme" id="poster-conf-theme">“Walking in Supernatural Favor”</p>
+
+      <div class="poster-qr-frame">
+        <canvas id="poster-qr-canvas" width="280" height="280"></canvas>
+        <div class="poster-scan-label">
+          <i class="bi bi-camera-fill"></i>
+          <span>SCAN WITH PHONE CAMERA</span>
+        </div>
+      </div>
+
+      <p class="poster-instructions">
+        Scan the QR code above with any mobile camera or QR reader to complete your free online registration instantly.
+      </p>
+
+      <div class="poster-meta-grid">
+        <div class="poster-meta-item">
+          <i class="bi bi-calendar2-week-fill"></i>
+          <div>
+            <strong>EVENT DATES</strong>
+            <span id="poster-conf-date">Dates to be announced</span>
+          </div>
+        </div>
+        <div class="poster-meta-item">
+          <i class="bi bi-geo-alt-fill"></i>
+          <div>
+            <strong>CONFERENCE VENUE</strong>
+            <span id="poster-conf-venue">Main Auditorium</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="poster-footer-url">
+        <span>Direct Online Registration Portal:</span>
+        <strong id="poster-conf-url">Loading link…</strong>
+      </div>
+    </div>
+  </dialog>
+
+  <script type="module" src="./assets/js/admin/main.js"></script>
+</body>
+</html>

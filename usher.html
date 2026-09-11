@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Door Attendance &amp; Check-In Station — Usher Portal</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/usher.css" />
+</head>
+<body class="usher-body">
+
+  <!-- ============ Header Bar ============ -->
+  <header class="usher-header">
+    <div class="container usher-header__inner">
+      <div class="usher-header__brand">
+        <div class="usher-header__brand-icon">
+          <i class="bi bi-person-check-fill"></i>
+        </div>
+        <div>
+          <p class="usher-header__label">Door Attendance Station</p>
+          <p class="usher-header__counter">Today's Headcount: <strong id="checked-in-count">0</strong></p>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn--ghost" id="refresh-counter-btn" title="Refresh count">
+          <i class="bi bi-arrow-clockwise"></i>
+        </button>
+        <button class="btn btn--ghost" id="logout-btn">
+          <i class="bi bi-box-arrow-right"></i>
+          <span>Sign out</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="usher-main">
+
+    <!-- Conference Day & Date Selector Bar -->
+    <div class="card" style="padding: 18px 20px; margin-bottom: 20px; border-left: 5px solid #2563EB;">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <label for="usher-session-date" style="font-size: 0.82rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 4px;">
+            <i class="bi bi-calendar2-week-fill text-primary"></i> Conference Program Date *
+          </label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <select id="usher-session-date" style="font-size: 0.95rem; font-weight: 700; color: #0F172A; padding: 8px 12px; border-radius: 10px; border: 1.5px solid #CBD5E1; background: #FFFFFF; min-width: 220px;">
+              <option value="">Loading conference dates…</option>
+            </select>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <span id="session-day-badge" class="badge" style="background: #EFF6FF; color: #2563EB; font-size: 0.8rem; font-weight: 700; padding: 5px 12px; border-radius: 999px;">
+            Live Session
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- The Door Question Switcher Card -->
+    <section class="card" style="text-align: center; padding: 24px 20px; margin-bottom: 20px; background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);">
+      <span style="font-size: 0.8rem; font-weight: 800; color: #2563EB; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">
+        <i class="bi bi-door-open-fill"></i> Door Entrance Screening
+      </span>
+      <h2 style="font-size: 1.25rem; font-weight: 800; color: #0F172A; margin: 0 0 16px;">
+        “Have you registered for the program already?”
+      </h2>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 480px; margin: 0 auto;">
+        <button type="button" class="btn btn--primary btn--lg" id="btn-switch-registered" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 16px 10px; border-radius: 14px; font-weight: 800;">
+          <i class="bi bi-check-circle-fill" style="font-size: 1.5rem;"></i>
+          <span>YES, REGISTERED</span>
+          <small style="font-size: 0.72rem; font-weight: 500; opacity: 0.9;">Fast Door Attendance</small>
+        </button>
+
+        <button type="button" class="btn btn--outline btn--lg" id="btn-switch-unregistered" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 16px 10px; border-radius: 14px; font-weight: 800; border-width: 2px;">
+          <i class="bi bi-person-plus-fill" style="font-size: 1.5rem; color: #2563EB;"></i>
+          <span>NO, NOT YET</span>
+          <small style="font-size: 0.72rem; font-weight: 500; color: #64748B;">Register &amp; Count Attendance</small>
+        </button>
+      </div>
+    </section>
+
+    <!-- TASK 1: Fast Door Attendance for Registered Attendees (Default Active View) -->
+    <section class="card" id="task1-card">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+        <h2 style="margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 8px;">
+          <i class="bi bi-clipboard2-check-fill text-success"></i>
+          <span>Task 1: Registered Attendee Attendance</span>
+        </h2>
+        <span class="badge" style="background: #DCFCE7; color: #166534; font-weight: 700; font-size: 0.76rem; padding: 4px 10px; border-radius: 999px;">
+          Fast Check-in
+        </span>
+      </div>
+
+      <p class="card-subtitle" style="margin-bottom: 18px;">
+        Ask the attendee or group leader their name and church affiliation, count how many they are, and submit attendance immediately.
+      </p>
+
+      <!-- Instant Search & Autocomplete from database -->
+      <div class="search-input-wrap" style="margin-bottom: 12px;">
+        <i class="bi bi-search"></i>
+        <input type="text" id="registered-search-input" placeholder="Quick search name, church or phone number…" autocomplete="off" />
+      </div>
+      <div id="registered-search-results" class="search-results" style="margin-bottom: 16px;"></div>
+
+      <form id="fast-attendance-form" novalidate>
+        <div class="field" style="margin-bottom: 14px;">
+          <label for="att-names" style="font-weight: 700; color: #334155; font-size: 0.88rem;">
+            Attendee Name(s) / Group Leader *
+          </label>
+          <input type="text" id="att-names" placeholder="Attendee name(s) or group leader name" required style="font-size: 1rem; padding: 12px 14px;" />
+          <span class="hint" style="font-size: 0.76rem; margin-top: 3px;">Even if many come together, enter their name(s) or family/leader name.</span>
+        </div>
+
+        <div class="field" style="margin-bottom: 16px;">
+          <label for="att-church" style="font-weight: 700; color: #334155; font-size: 0.88rem;">
+            Home Church / Ministry Affiliation *
+          </label>
+          <input type="text" id="att-church" placeholder="Church or ministry affiliation" required style="font-size: 1rem; padding: 12px 14px;" />
+        </div>
+
+        <!-- Touch-Friendly Headcount Counter -->
+        <div style="background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 16px; padding: 18px; margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <label style="margin: 0; font-size: 0.9rem; font-weight: 800; color: #0F172A; display: flex; align-items: center; gap: 6px;">
+              <i class="bi bi-people-fill text-primary" style="font-size: 1.1rem;"></i> Number of People Entering (Headcount)
+            </label>
+            <span style="font-size: 0.78rem; font-weight: 700; color: #2563EB; background: #EFF6FF; padding: 2px 8px; border-radius: 6px;">Total Count</span>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: center; gap: 14px;">
+            <button type="button" id="btn-pax-minus" class="btn btn--outline" style="width: 52px; height: 52px; font-size: 1.4rem; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; touch-action: manipulation;">
+              <i class="bi bi-dash-lg"></i>
+            </button>
+
+            <div style="flex: 1; max-width: 140px; text-align: center;">
+              <input type="number" id="att-pax-count" min="1" max="500" value="1" style="font-size: 2rem; font-weight: 900; text-align: center; border: 2px solid #CBD5E1; border-radius: 12px; width: 100%; height: 56px; color: #0F172A; background: #FFFFFF;" />
+            </div>
+
+            <button type="button" id="btn-pax-plus" class="btn btn--outline" style="width: 52px; height: 52px; font-size: 1.4rem; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; touch-action: manipulation;">
+              <i class="bi bi-plus-lg"></i>
+            </button>
+          </div>
+
+          <!-- Quick Headcount Preset Chips -->
+          <div style="display: flex; gap: 8px; justify-content: center; margin-top: 14px; flex-wrap: wrap;">
+            <button type="button" class="btn btn--ghost btn--sm pax-preset" data-val="1" style="border: 1px solid #CBD5E1; border-radius: 8px; padding: 4px 10px; font-weight: 700;">1 (Single)</button>
+            <button type="button" class="btn btn--ghost btn--sm pax-preset" data-val="2" style="border: 1px solid #CBD5E1; border-radius: 8px; padding: 4px 10px; font-weight: 700;">2 (Pair)</button>
+            <button type="button" class="btn btn--ghost btn--sm pax-preset" data-val="3" style="border: 1px solid #CBD5E1; border-radius: 8px; padding: 4px 10px; font-weight: 700;">3</button>
+            <button type="button" class="btn btn--ghost btn--sm pax-preset" data-val="5" style="border: 1px solid #CBD5E1; border-radius: 8px; padding: 4px 10px; font-weight: 700;">5 (Group)</button>
+            <button type="button" class="btn btn--ghost btn--sm pax-preset" data-val="10" style="border: 1px solid #CBD5E1; border-radius: 8px; padding: 4px 10px; font-weight: 700;">10 (Delegation)</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn--primary btn--block btn--lg" id="btn-submit-attendance" style="padding: 16px; font-size: 1.05rem; font-weight: 800; border-radius: 14px;">
+          <i class="bi bi-check2-circle" style="font-size: 1.3rem;"></i>
+          <span>Record Daily Attendance &amp; Admit</span>
+        </button>
+      </form>
+    </section>
+
+    <!-- TASK 2: Register Unregistered Walk-in Attendee at Door with Instant Attendance Button -->
+    <section class="card" id="task2-card" hidden>
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+        <h2 style="margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 8px;">
+          <i class="bi bi-person-plus-fill text-primary"></i>
+          <span>Task 2: Door Walk-in Registration</span>
+        </h2>
+        <button type="button" class="btn btn--ghost btn--sm" id="btn-cancel-to-task1" style="font-size: 0.8rem;">
+          <i class="bi bi-arrow-left"></i> Back
+        </button>
+      </div>
+
+      <p class="card-subtitle" style="margin-bottom: 18px;">
+        Register walk-in attendees now. Their contact phone is instantly saved on the system for SMS messages, and their daily attendance is counted immediately at the bottom.
+      </p>
+
+      <!-- Registration Category Switcher Tabs -->
+      <div class="tabs" role="tablist" aria-label="Registration category" style="margin-bottom: 18px;">
+        <button type="button" class="tab tab--active" role="tab" aria-selected="true" data-category="person">
+          <i class="bi bi-person-fill"></i> Person
+        </button>
+        <button type="button" class="tab" role="tab" aria-selected="false" data-category="institution">
+          <i class="bi bi-building"></i> Institution
+        </button>
+        <button type="button" class="tab" role="tab" aria-selected="false" data-category="church">
+          <i class="bi bi-bank2"></i> Church
+        </button>
+      </div>
+
+      <form id="walkin-register-form" class="reg-form" novalidate>
+        <input type="hidden" id="walkin-category" value="person" />
+
+        <!-- Person Category Fields -->
+        <div class="reg-form__group" data-group="person">
+          <div class="field"><label>Full Name *</label><input type="text" name="full_name" placeholder="Full name" required /></div>
+          <div class="field"><label>Contact Phone (for SMS notifications) *</label><input type="tel" name="contact_phone" placeholder="024 123 4567" required /></div>
+          <div class="field"><label>Home Church Affiliation *</label><input type="text" name="church_affiliation" placeholder="Church or ministry affiliation" required /></div>
+          <div class="field"><label>Location / City</label><input type="text" name="location" placeholder="City or location" /></div>
+          <div class="field"><label>Invited By (Optional)</label><input type="text" name="invited_by" placeholder="Invited by (optional)" /></div>
+          <div class="checkbox-field" style="margin-top: 8px;">
+            <input type="checkbox" id="walkin-first-time" name="is_first_time" />
+            <label for="walkin-first-time">First-time attendee at this conference</label>
+          </div>
+        </div>
+
+        <!-- Institution Category Fields -->
+        <div class="reg-form__group" data-group="institution" hidden>
+          <div class="field"><label>Institution Name *</label><input type="text" name="full_name" placeholder="Institution or organization name" required /></div>
+          <div class="field"><label>Contact Phone (for SMS notifications) *</label><input type="tel" name="contact_phone" placeholder="024 123 4567" required /></div>
+          <div class="field"><label>Number of Delegates / Members</label><input type="number" name="number_of_members" min="1" value="1" /></div>
+          <div class="field"><label>Location</label><input type="text" name="location" placeholder="City" /></div>
+          <div class="field"><label>Invited By</label><input type="text" name="invited_by" placeholder="Invited by (optional)" /></div>
+        </div>
+
+        <!-- Church Category Fields -->
+        <div class="reg-form__group" data-group="church" hidden>
+          <div class="field"><label>Church Name *</label><input type="text" name="full_name" placeholder="Visiting church name" required /></div>
+          <div class="field"><label>Contact Phone (for SMS notifications) *</label><input type="tel" name="contact_phone" placeholder="024 123 4567" required /></div>
+          <div class="field"><label>Delegation Size (Number of members)</label><input type="number" name="number_of_members" min="1" value="1" /></div>
+          <div class="field"><label>Location</label><input type="text" name="location" placeholder="City" /></div>
+          <div class="field"><label>Invited By</label><input type="text" name="invited_by" placeholder="Invited by (optional)" /></div>
+        </div>
+
+        <!-- Bottom Instant Attendance Section -->
+        <div style="background: #F0FDF4; border: 1.5px solid #BBF7D0; border-radius: 14px; padding: 16px; margin: 20px 0 16px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <span style="font-size: 0.85rem; font-weight: 800; color: #166534; display: flex; align-items: center; gap: 6px;">
+              <i class="bi bi-check-circle-fill text-success"></i> Daily Attendance Headcount
+            </span>
+            <span style="font-size: 0.74rem; font-weight: 700; color: #15803D;">Auto-Linked</span>
+          </div>
+
+          <p style="margin: 0 0 10px; font-size: 0.82rem; color: #166534;">
+            Attendees registered here are saved into the system's contact directory for SMS notifications and counted immediately in the program attendance record.
+          </p>
+
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <label for="walkin-pax" style="font-size: 0.85rem; font-weight: 700; color: #166534; white-space: nowrap; margin: 0;">
+              Headcount to Admit:
+            </label>
+            <input type="number" id="walkin-pax" min="1" max="500" value="1" style="width: 80px; font-weight: 800; font-size: 1.1rem; text-align: center; border-radius: 8px; border: 1.5px solid #86EFAC; padding: 6px; background: #FFFFFF;" />
+          </div>
+        </div>
+
+        <!-- The Instant Attendance Button at the bottom of the registration form -->
+        <button type="submit" class="btn btn--primary btn--block btn--lg" id="btn-walkin-instant-attendance" style="padding: 16px; font-size: 1.05rem; font-weight: 800; border-radius: 14px; background: #16A34A; border-color: #16A34A;">
+          <i class="bi bi-person-check-fill" style="font-size: 1.25rem;"></i>
+          <span>Save Registration &amp; Count Daily Attendance</span>
+        </button>
+
+        <button type="button" class="btn btn--ghost btn--block" id="btn-walkin-cancel" style="margin-top: 8px;">
+          <span>Cancel &amp; Return</span>
+        </button>
+      </form>
+    </section>
+
+    <!-- Usher Footer -->
+    <footer class="app-footer" style="margin-top: 36px; border-radius: 14px; border: 1px solid var(--color-line); background: #FFFFFF;">
+      <div class="app-footer__inner" style="max-width: 100%;">
+        <p class="app-footer__copy">
+          &copy; <span class="footer-year"></span> Conference Management System. All rights reserved.
+        </p>
+        
+        <div class="app-footer__developer">
+          <span class="developer-label">Designed &amp; Developed by</span>
+          <span class="developer-credit">
+            <span class="developer-name">StackWeb Developer</span>
+            <span class="developer-tagline">Smart System. Real Solutions.</span>
+          </span>
+        </div>
+      </div>
+    </footer>
+
+  </main>
+
+  <script type="module" src="./assets/js/usher.js"></script>
+</body>
+</html>
+

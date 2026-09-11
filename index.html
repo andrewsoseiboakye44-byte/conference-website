@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Conference Registration — Annual Church Conference</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/public.css" />
+</head>
+<body>
+
+  <!-- ============ Top Navigation Bar ============ -->
+  <header class="site-nav">
+    <div class="container site-nav__inner">
+      <div class="site-nav__brand">
+        <span class="site-nav__brand-icon"><i class="bi bi-shield-shaded"></i></span>
+        <span>Conference Registration</span>
+      </div>
+      <div class="site-nav__actions">
+        <a href="#schedule" class="btn btn--ghost btn--sm" style="color: #CBD5E1; text-decoration: none;">
+          <i class="bi bi-calendar3"></i>
+          <span>Schedule</span>
+        </a>
+        <a href="#register" class="btn btn--cta btn--sm">
+          <i class="bi bi-ticket-perforated-fill"></i>
+          <span>Register Now</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="hero">
+    <div class="container hero__inner">
+      <div class="hero__eyebrow-pill" id="hero-eyebrow">
+        <i class="bi bi-calendar-event"></i>
+        <span id="hero-dates">Loading dates…</span>
+      </div>
+      <h1 id="hero-name">Annual Church Conference</h1>
+      <p class="hero__theme" id="hero-theme"></p>
+      
+      <div class="hero__meta">
+        <div class="hero__meta-item" id="hero-venue-wrap">
+          <i class="bi bi-geo-alt-fill"></i>
+          <span id="hero-venue">Loading venue…</span>
+        </div>
+      </div>
+
+      <div class="hero__actions">
+        <a href="#register" class="btn btn--cta btn--lg">
+          <i class="bi bi-pencil-square"></i>
+          <span>Register to Attend</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ABOUT ============ -->
+  <section class="section about" id="about">
+    <div class="container">
+      <div class="section-header">
+        <h2>About the Conference</h2>
+        <p>Join believers from across the nation for an unforgettable encounter.</p>
+      </div>
+      <div class="about-card">
+        <p id="about-description">Loading conference details…</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SPEAKERS ============ -->
+  <section class="section speakers" id="speakers">
+    <div class="container">
+      <div class="section-header">
+        <h2>Featured Speakers</h2>
+        <p>Ministers and keynote speakers leading this year's sessions.</p>
+      </div>
+      <div class="speakers__grid" id="speakers-grid">
+        <!-- Initial Skeleton Shimmer Loaders -->
+        <div class="speaker-card skeleton-card">
+          <div class="skeleton skeleton-img"></div>
+          <div class="skeleton skeleton-title" style="height: 1.3rem; width: 65%;"></div>
+          <div class="skeleton skeleton-text" style="width: 45%; margin-bottom: 12px;"></div>
+          <div class="skeleton skeleton-text" style="width: 90%;"></div>
+        </div>
+        <div class="speaker-card skeleton-card">
+          <div class="skeleton skeleton-img"></div>
+          <div class="skeleton skeleton-title" style="height: 1.3rem; width: 65%;"></div>
+          <div class="skeleton skeleton-text" style="width: 45%; margin-bottom: 12px;"></div>
+          <div class="skeleton skeleton-text" style="width: 90%;"></div>
+        </div>
+        <div class="speaker-card skeleton-card">
+          <div class="skeleton skeleton-img"></div>
+          <div class="skeleton skeleton-title" style="height: 1.3rem; width: 65%;"></div>
+          <div class="skeleton skeleton-text" style="width: 45%; margin-bottom: 12px;"></div>
+          <div class="skeleton skeleton-text" style="width: 90%;"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PROGRAM SCHEDULE ============ -->
+  <section class="section schedule" id="schedule">
+    <div class="container">
+      <div class="section-header" style="text-align: center; margin-bottom: 34px;">
+        <div class="section-eyebrow" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.84rem; font-weight: 700; color: #2563EB; text-transform: uppercase; letter-spacing: 0.06em; background: #EFF6FF; border: 1px solid #BFDBFE; padding: 4px 14px; border-radius: 999px; margin-bottom: 12px;">
+          <i class="bi bi-calendar3-range-fill"></i>
+          <span>Conference Program</span>
+        </div>
+        <h2 style="font-size: clamp(1.8rem, 3.8vw, 2.4rem); font-weight: 800; color: #0F172A; margin: 0 0 10px;">Program &amp; Session Schedule</h2>
+        <p style="color: #64748B; font-size: 1.05rem; max-width: 620px; margin: 0 auto;">
+          Explore our daily timeline, breakout seminars, keynote ministrations, and worship encounters.
+        </p>
+      </div>
+
+      <!-- Day Selection Pills / Tabs -->
+      <div class="schedule-days-tabs" id="schedule-days-tabs" role="tablist" aria-label="Conference days">
+        <!-- Dynamically rendered by public.js -->
+        <div class="skeleton skeleton-text" style="height: 48px; width: 280px; margin: 0 auto 24px; border-radius: 999px;"></div>
+      </div>
+
+      <!-- Active Day Program Sessions Timeline -->
+      <div class="schedule-content" id="schedule-content">
+        <!-- Dynamically rendered by public.js -->
+        <div class="skeleton-card" style="padding: 24px; border-radius: 16px; margin-bottom: 14px;">
+          <div class="skeleton skeleton-title" style="height: 1.4rem; width: 45%;"></div>
+          <div class="skeleton skeleton-text" style="width: 80%;"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ REGISTRATION PORTAL ============ -->
+  <section class="section register" id="register">
+    <div class="container">
+      <div class="section-header" style="text-align: center;">
+        <h2>Register to Attend</h2>
+        <p>Select your attendee category below and complete your registration in seconds.</p>
+      </div>
+
+      <div class="reg-portal-wrap">
+        <!-- Interactive Category Cards (Tabs) -->
+        <div class="reg-category-grid tabs" role="tablist" aria-label="Registration category">
+          <div class="tab reg-category-card tab--active" role="tab" aria-selected="true" data-category="person" tabindex="0">
+            <div class="reg-category-icon"><i class="bi bi-person-fill"></i></div>
+            <div>
+              <h4 class="reg-category-title">Individual / Group</h4>
+              <p class="reg-category-desc">Self, family, or personal guests</p>
+            </div>
+          </div>
+          <div class="tab reg-category-card" role="tab" aria-selected="false" data-category="institution" tabindex="0">
+            <div class="reg-category-icon"><i class="bi bi-building-fill"></i></div>
+            <div>
+              <h4 class="reg-category-title">Institution</h4>
+              <p class="reg-category-desc">Schools, corporate, NGO delegations</p>
+            </div>
+          </div>
+          <div class="tab reg-category-card" role="tab" aria-selected="false" data-category="church" tabindex="0">
+            <div class="reg-category-icon"><i class="bi bi-bank2"></i></div>
+            <div>
+              <h4 class="reg-category-title">Church</h4>
+              <p class="reg-category-desc">Sister assemblies &amp; delegations</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Card Surface -->
+        <div class="reg-card">
+          <!-- Dynamic Form Header -->
+          <div class="reg-card-header">
+            <div>
+              <h3 id="active-category-title">Individual &amp; Family Registration</h3>
+              <p id="active-category-subtitle">Register for yourself, your family, or a small personal group.</p>
+            </div>
+            <div class="reg-badge-pill">
+              <i class="bi bi-shield-check"></i>
+              <span>Instant Free Confirmation</span>
+            </div>
+          </div>
+
+          <form id="registration-form" class="reg-form" novalidate>
+            <input type="hidden" id="category" value="person" />
+
+            <!-- PERSON fields -->
+            <div class="reg-form__group" data-group="person">
+              <div class="field">
+                <label for="person-name">
+                  <span>Full Name</span>
+                  <span class="field-required">* Required</span>
+                </label>
+                <div class="input-group-modern">
+                  <span class="input-icon-badge"><i class="bi bi-person-fill"></i></span>
+                  <input type="text" id="person-name" name="full_name" autocomplete="name" placeholder="e.g. Kwame Mensah" />
+                </div>
+                <span class="error">Please enter your full name.</span>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="field">
+                  <label for="person-location">City / Location</label>
+                  <div class="input-group-modern">
+                    <span class="input-icon-badge"><i class="bi bi-geo-alt-fill"></i></span>
+                    <input type="text" id="person-location" name="location" placeholder="e.g. Accra" />
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label for="person-church">Church Affiliation</label>
+                  <div class="input-group-modern">
+                    <span class="input-icon-badge"><i class="bi bi-bank"></i></span>
+                    <input type="text" id="person-church" name="church_affiliation" placeholder="e.g. Bethel Assembly" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="field">
+                  <label for="person-phone">
+                    <span>Contact Phone</span>
+                    <span class="field-required">* Required</span>
+                  </label>
+                  <div class="input-group-modern">
+                    <span class="input-icon-badge"><i class="bi bi-telephone-fill"></i></span>
+                    <input type="tel" id="person-phone" name="contact_phone" inputmode="tel" placeholder="024 123 4567" />
+                  </div>
+                  <span class="error">Please enter a valid phone number.</span>
+                </div>
+
+                <div class="field">
+                  <label for="person-invited">Invited By (Optional)</label>
+                  <div class="input-group-modern">
+                    <span class="input-icon-badge"><i class="bi bi-person-heart"></i></span>
+                    <input type="text" id="person-invited" name="invited_by" placeholder="Friend or member name" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- First Time Welcome Gift Callout -->
+              <label class="welcome-gift-card" for="person-first-time">
+                <input type="checkbox" id="person-first-time" name="is_first_time" />
+                <div class="welcome-gift-text">
+                  <div class="welcome-gift-title">
+                    <i class="bi bi-gift-fill"></i>
+                    <span>First time attending this conference?</span>
+                  </div>
+                  <p class="welcome-gift-desc">Check this box so our welcome team can prepare your complimentary gift package at the hospitality desk.</p>
+                </div>
+              </label>
+            </div>
+
+            <!-- INSTITUTION fields -->
+            <div class="reg-form__group" data-group="institution" hidden>
+              <div class="field">
+                <label for="inst-name">
+                  <span>Institution / Company Name</span>
+                  <span class="field-required">* Required</span>
+                </label>
+                <div class="input-group-modern">
+                  <span class="input-icon-badge"><i class="bi bi-building-fill"></i></span>
+                  <input type="text" id="inst-name" name="full_name" placeholder="e.g. Grace International Academy" />
+                </div>
+                <span class="error">Please enter the institution name.</span>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="field">
+                  <label for="inst-location">City / Location</label>
+                  <div class="input-group-modern">
+                    <span class="input-icon-badge"><i class="bi bi-geo-alt-fill"></i></span>
+                    <input type="text" id="inst-location" name="location" placeholder="e.g. Kumasi" />
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label for="inst-members">Number of Members Attending</label>
+                  <div class="input-group-modern">
+                    <span class="input-icon-badge"><i class="bi bi-people-fill"></i></span>
+                    <input type="number" id="inst-members" name="number_of_members" min="1" placeholder="e.g. 15" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="field">
+                  <label for="inst-phone">
+                    <span>Contact Phone</span>
+                    <span class="field-required">* Required</span>
+                  </label>
+                  <div class="input-group-modern">
+                    <span class="input-icon-badge"><i class="bi bi-telephone-fill"></i></span>
+                    <input type="tel" id="inst-phone" name="contact_phone" inputmode="tel" placeholder="024 123 4567" />
+                  </div>
+                  <span class="error">Please enter a valid phone number.</span>
+                </div>
+
+                <div class="field">
+                  <label for="inst-invited">Invited By (Optional)</label>
+                  <div class="input-group-modern">
+                    <span class="input-icon-badge"><i class="bi bi-person-heart"></i></span>
+                    <input type="text" id="inst-invited" name="invited_by" placeholder="Coordinator or contact person" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CHURCH fields -->
+            <div class="reg-form__group" data-group="church" hidden>
+              <div class="field">
+                <label for="church-name">
+                  <span>Church Name</span>
+                  <span class="field-required">* Required</span>
+                </label>
+                <div class="input-group-modern">
+                  <span class="input-icon-badge"><i class="bi bi-bank2"></i></span>
+                  <input type="text" id="church-name" name="full_name" placeholder="e.g. Victory Bible Church International" />
+                </div>
+                <span class="error">Please enter the church name.</span>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="field">
+                  <label for="church-location">City / Location</label>
+                  <div class="input-group-modern">
+                    <span class="input-icon-badge"><i class="bi bi-geo-alt-fill"></i></span>
+                    <input type="text" id="church-location" name="location" placeholder="e.g. Takoradi" />
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label for="church-members">Delegation Size</label>
+                  <div class="input-group-modern">
+                    <span class="input-icon-badge"><i class="bi bi-people-fill"></i></span>
+                    <input type="number" id="church-members" name="number_of_members" min="1" placeholder="e.g. 30" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="field">
+                  <label for="church-phone">
+                    <span>Leader Contact Phone</span>
+                    <span class="field-required">* Required</span>
+                  </label>
+                  <div class="input-group-modern">
+                    <span class="input-icon-badge"><i class="bi bi-telephone-fill"></i></span>
+                    <input type="tel" id="church-phone" name="contact_phone" inputmode="tel" placeholder="024 123 4567" />
+                  </div>
+                  <span class="error">Please enter a valid phone number.</span>
+                </div>
+
+                <div class="field">
+                  <label for="church-invited">Invited By (Optional)</label>
+                  <div class="input-group-modern">
+                    <span class="input-icon-badge"><i class="bi bi-person-heart"></i></span>
+                    <input type="text" id="church-invited" name="invited_by" placeholder="Host pastor or department" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Voluntary MoMo Offering & Support Section -->
+            <div class="momo-support-card" id="donor-support-card" hidden>
+              <div class="momo-support-header">
+                <div class="momo-support-title-wrap">
+                  <span class="momo-support-heart"><i class="bi bi-heart-fill"></i></span>
+                  <div>
+                    <h4 class="momo-support-title" id="donor-support-title">Partner &amp; Support This Conference</h4>
+                    <p class="momo-support-subtitle">Registration is 100% Free. Voluntary contributions help support conference hosting, materials &amp; outreach.</p>
+                  </div>
+                </div>
+                <span class="momo-network-badge" id="donor-momo-network">MTN MoMo</span>
+              </div>
+
+              <div class="momo-support-body">
+                <div class="momo-number-box">
+                  <div class="momo-number-meta">
+                    <span class="momo-meta-label">Send MoMo To:</span>
+                    <span class="momo-meta-name" id="donor-momo-name">Grace Chapel International</span>
+                  </div>
+                  <div class="momo-digits-row">
+                    <span class="momo-number-display" id="donor-momo-number">024 123 4567</span>
+                    <button type="button" class="btn-copy-momo" id="btn-copy-momo" aria-label="Copy Mobile Money Number">
+                      <i class="bi bi-clipboard"></i>
+                      <span>Copy Number</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="momo-instructions-row" id="donor-momo-note-wrap">
+                  <i class="bi bi-info-circle-fill"></i>
+                  <span id="donor-momo-note">Use reference: "DONATION". Thank you for your partnership!</span>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-submit-reg" id="submit-btn">
+              <span>Complete Free Registration</span>
+              <i class="bi bi-arrow-right-circle-fill"></i>
+            </button>
+            <div class="reg-form-notice">
+              <i class="bi bi-lock-fill"></i>
+              <span>Your contact details are strictly kept private &amp; used only for event access.</span>
+            </div>
+          </form>
+
+          <!-- Success State / Digital Confirmation Pass -->
+          <div class="reg-success" id="reg-success" hidden>
+            <div class="reg-success__badge" style="width: 72px; height: 72px; border-radius: 50%; background: #ECFDF5; display: inline-flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+              <i class="bi bi-check-lg" style="color: #059669; font-size: 2.5rem;"></i>
+            </div>
+            <h3 style="font-size: 1.8rem; font-weight: 800; color: #0F172A; margin: 0 0 6px;">Registration Confirmed!</h3>
+            <p style="color: #64748B; font-size: 0.98rem; max-width: 520px; margin: 0 auto 24px;">A confirmation SMS with your entry details has been dispatched to your phone. Present this digital pass at the entrance.</p>
+
+            <div class="pass-card">
+              <div class="pass-card-header">
+                <h4><i class="bi bi-ticket-perforated-fill"></i> Official Conference Pass</h4>
+                <span class="badge" style="background: rgba(255,255,255,0.22); color: #fff; padding: 5px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em;">CONFIRMED</span>
+              </div>
+              <div class="pass-card-body">
+                <div class="pass-attendee-name" id="pass-attendee-name">—</div>
+                <div class="pass-details-grid">
+                  <div class="pass-detail-item">
+                    <label>Category</label>
+                    <span id="pass-attendee-category">—</span>
+                  </div>
+                  <div class="pass-detail-item">
+                    <label>Contact Phone</label>
+                    <span id="pass-attendee-phone">—</span>
+                  </div>
+                  <div class="pass-detail-item">
+                    <label>Location</label>
+                    <span id="pass-attendee-location">—</span>
+                  </div>
+                  <div class="pass-detail-item">
+                    <label>Access Tier</label>
+                    <span>General Admission &bull; Free</span>
+                  </div>
+                </div>
+                <div class="pass-notice-banner">
+                  <i class="bi bi-info-circle-fill" style="font-size: 1.25rem;"></i>
+                  <span>Please keep this pass or your SMS confirmation handy when arriving at the auditorium.</span>
+                </div>
+
+                <!-- MoMo Support on Digital Pass -->
+                <div class="pass-momo-card" id="pass-momo-card" hidden>
+                  <div class="pass-momo-header">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <i class="bi bi-heart-fill text-danger"></i>
+                      <span class="pass-momo-title" style="font-weight: 700; font-size: 0.88rem; color: #92400E;">Voluntary Support / Giving:</span>
+                    </div>
+                    <span class="badge" id="pass-momo-net" style="background: #FEF08A; color: #854D0E; font-size: 0.72rem; font-weight: 700; border-radius: 6px; padding: 2px 8px;">MTN</span>
+                  </div>
+                  <div class="pass-momo-content" style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; flex-wrap: wrap; gap: 8px;">
+                    <div>
+                      <span id="pass-momo-num" style="font-size: 1.15rem; font-weight: 800; color: #0F172A; font-family: monospace; letter-spacing: 0.04em;">024 123 4567</span>
+                      <span id="pass-momo-name" style="font-size: 0.84rem; color: #78350F; margin-left: 8px; font-weight: 600;">(Grace Chapel)</span>
+                    </div>
+                    <button type="button" class="btn btn--outline btn--sm" id="btn-copy-pass-momo" style="border-color: #FCD34D; color: #92400E; font-weight: 700; background: #FFFFFF;">
+                      <i class="bi bi-clipboard"></i>
+                      <span>Copy MoMo</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="pass-actions">
+                  <button type="button" class="btn btn--outline btn--sm" id="btn-register-another" style="flex: 1; justify-content: center; min-height: 46px; font-weight: 700;">
+                    <i class="bi bi-plus-circle-fill"></i>
+                    <span>Register Another Attendee</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="app-footer app-footer--dark">
+    <div class="container app-footer__inner">
+      <p class="app-footer__copy">
+        &copy; <span class="footer-year" id="footer-year"></span> Conference Management System. All rights reserved.
+      </p>
+      
+      <div class="app-footer__developer">
+        <span class="developer-label">Designed &amp; Developed by</span>
+        <span class="developer-credit">
+          <span class="developer-name">StackWeb Developer</span>
+          <span class="developer-tagline">Smart System. Real Solutions.</span>
+        </span>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="./assets/js/public.js"></script>
+</body>
+</html>

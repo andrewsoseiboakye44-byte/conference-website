@@ -1,0 +1,15 @@
+{
+  "name": "conference-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Church conference management system — public registration, admin dashboard, usher check-in, powered by Supabase.",
+  "scripts": {
+    "dev": "npx serve . -l 5500",
+    "functions:serve": "supabase functions serve",
+    "functions:deploy": "supabase functions deploy",
+    "db:push": "supabase db push"
+  },
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}
