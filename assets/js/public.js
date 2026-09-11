@@ -25,29 +25,58 @@ async function init() {
 // ---------- CMS content ----------
 
 async function loadConferenceSettings() {
-  const { data, error } = await supabase
-    .from('conference_settings')
-    .select('*')
-    .limit(1)
-    .single();
+  // 1. Immediately apply cached settings from localStorage (0ms instant display, no flicker!)
+  try {
+    const cached = localStorage.getItem('cached_conference_settings');
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed) applyConferenceSettings(parsed);
+    }
+  } catch { /* ignore */ }
 
-  if (error || !data) {
-    console.error('Could not load conference settings', error);
-    return;
+  // 2. Fetch fresh settings from database
+  try {
+    const { data, error } = await supabase
+      .from('conference_settings')
+      .select('*')
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Could not load conference settings', error);
+      return;
+    }
+
+    if (data) {
+      try {
+        localStorage.setItem('cached_conference_settings', JSON.stringify(data));
+      } catch { /* ignore */ }
+      applyConferenceSettings(data);
+    }
+  } catch (err) {
+    console.error('Exception loading conference settings', err);
   }
+}
+
+function applyConferenceSettings(data) {
+  if (!data) return;
 
   const nameEl = document.getElementById('hero-name');
-  if (nameEl) nameEl.textContent = data.conference_name ?? 'Annual Conference';
+  if (nameEl) {
+    nameEl.textContent = data.conference_name || '';
+  }
 
   const themeEl = document.getElementById('hero-theme');
-  if (themeEl) themeEl.textContent = data.theme_scripture ?? '';
+  if (themeEl) {
+    if (data.theme_scripture && data.theme_scripture.trim()) {
+      themeEl.textContent = data.theme_scripture.trim();
+      themeEl.style.display = 'block';
+    } else {
+      themeEl.style.display = 'none';
+    }
+  }
 
-  const venueEl = document.getElementById('hero-venue');
-  if (venueEl) venueEl.textContent = data.venue ?? 'Conference Auditorium';
-
-  const descEl = document.getElementById('about-description');
-  if (descEl) descEl.textContent = data.description ?? 'Join us for an inspiring gathering of faith, worship, and fellowship.';
-
+  const eyebrowEl = document.getElementById('hero-eyebrow');
   const dates = document.getElementById('hero-dates');
   if (dates) {
     let cleanTime = '';
@@ -66,17 +95,50 @@ async function loadConferenceSettings() {
       }
     }
 
+    let dateText = '';
     if (data.start_date && data.end_date) {
       const opts = { day: 'numeric', month: 'short', year: 'numeric' };
       const start = new Date(data.start_date).toLocaleDateString('en-GB', opts);
       const end = new Date(data.end_date).toLocaleDateString('en-GB', opts);
-      dates.textContent = cleanTime ? `${start} – ${end} · ${cleanTime}` : `${start} – ${end}`;
+      dateText = cleanTime ? `${start} – ${end} · ${cleanTime}` : `${start} – ${end}`;
     } else if (data.start_date) {
       const opts = { day: 'numeric', month: 'short', year: 'numeric' };
       const start = new Date(data.start_date).toLocaleDateString('en-GB', opts);
-      dates.textContent = cleanTime ? `Starts ${start} · ${cleanTime}` : `Starts ${start}`;
+      dateText = cleanTime ? `Starts ${start} · ${cleanTime}` : `Starts ${start}`;
+    } else if (cleanTime) {
+      dateText = cleanTime;
+    }
+
+    if (dateText) {
+      dates.textContent = dateText;
+      if (eyebrowEl) eyebrowEl.style.display = 'inline-flex';
     } else {
-      dates.textContent = 'Dates to be announced';
+      if (eyebrowEl) eyebrowEl.style.display = 'none';
+    }
+  }
+
+  const metaEl = document.getElementById('hero-meta');
+  const venueWrap = document.getElementById('hero-venue-wrap');
+  const venueEl = document.getElementById('hero-venue');
+  if (venueEl) {
+    if (data.venue && data.venue.trim()) {
+      venueEl.textContent = data.venue.trim();
+      if (venueWrap) venueWrap.style.display = 'inline-flex';
+      if (metaEl) metaEl.style.display = 'flex';
+    } else {
+      if (venueWrap) venueWrap.style.display = 'none';
+      if (metaEl) metaEl.style.display = 'none';
+    }
+  }
+
+  const aboutSection = document.getElementById('about');
+  const descEl = document.getElementById('about-description');
+  if (descEl) {
+    if (data.description && data.description.trim()) {
+      descEl.textContent = data.description.trim();
+      if (aboutSection) aboutSection.style.display = '';
+    } else {
+      if (aboutSection) aboutSection.style.display = 'none';
     }
   }
 
@@ -112,13 +174,23 @@ async function loadConferenceSettings() {
 }
 
 function renderPublicSchedule(scheduleList, confData) {
+  const scheduleSection = document.getElementById('schedule');
   const tabsContainer = document.getElementById('schedule-days-tabs');
   const contentContainer = document.getElementById('schedule-content');
   if (!tabsContainer || !contentContainer) return;
 
-  // If no structured schedule configured yet, provide fallback
-  if (!Array.isArray(scheduleList) || scheduleList.length === 0) {
-    let summaryTime = 'Morning & Evening Sessions';
+  const hasSchedule = Array.isArray(scheduleList) && scheduleList.length > 0;
+  const hasDailyTime = !!(confData?.daily_time && (typeof confData.daily_time !== 'string' || confData.daily_time.trim()));
+
+  if (!hasSchedule && !hasDailyTime) {
+    if (scheduleSection) scheduleSection.style.display = 'none';
+    return;
+  }
+  if (scheduleSection) scheduleSection.style.display = '';
+
+  // If no structured multi-day schedule, provide clean daily time display
+  if (!hasSchedule) {
+    let summaryTime = '';
     if (confData?.daily_time) {
       if (typeof confData.daily_time === 'string' && confData.daily_time.startsWith('{')) {
         try {
@@ -131,29 +203,35 @@ function renderPublicSchedule(scheduleList, confData) {
         summaryTime = confData.daily_time.trim();
       }
     }
-    const venue = confData?.venue || 'Main Conference Auditorium';
+    const venue = confData?.venue || '';
 
     tabsContainer.innerHTML = '';
     contentContainer.innerHTML = `
       <div class="schedule-active-day-banner">
-        <h3><i class="bi bi-clock-history text-primary"></i> Daily Service Schedule</h3>
-        <span class="badge" style="background: #EFF6FF; color: #2563EB; font-weight: 700; padding: 4px 10px; border-radius: 999px;">
-          ${escapeHtml(summaryTime)}
-        </span>
+        <h3><i class="bi bi-clock-history text-primary"></i> Program Schedule</h3>
+        ${summaryTime ? `
+          <span class="badge" style="background: #EFF6FF; color: #2563EB; font-weight: 700; padding: 4px 10px; border-radius: 999px;">
+            ${escapeHtml(summaryTime)}
+          </span>
+        ` : ''}
       </div>
       <div class="schedule-sessions-grid">
         <div class="schedule-session-card">
           <div class="session-time-col">
-            <span class="session-time-badge">
-              <i class="bi bi-clock-fill"></i> ${escapeHtml(summaryTime)}
-            </span>
-            <span class="session-venue-badge">
-              <i class="bi bi-geo-alt-fill"></i> ${escapeHtml(venue)}
-            </span>
+            ${summaryTime ? `
+              <span class="session-time-badge">
+                <i class="bi bi-clock-fill"></i> ${escapeHtml(summaryTime)}
+              </span>
+            ` : ''}
+            ${venue ? `
+              <span class="session-venue-badge">
+                <i class="bi bi-geo-alt-fill"></i> ${escapeHtml(venue)}
+              </span>
+            ` : ''}
           </div>
           <div class="session-info-col">
-            <h4>General Conference Assembly &amp; Revival</h4>
-            <p class="session-desc">Detailed multi-day breakout sessions will appear here as scheduled by the administrators. Register now to receive full program updates!</p>
+            <h4>${escapeHtml(confData?.conference_name || 'General Session')}</h4>
+            <p class="session-desc">Welcome to our conference sessions. Register to reserve your seat!</p>
           </div>
         </div>
       </div>
