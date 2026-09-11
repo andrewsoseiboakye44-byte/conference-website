@@ -302,6 +302,19 @@
   line-height: 1.2;
 }
 
+.cat-label-short {
+  display: none;
+}
+
+@media (max-width: 540px) {
+  .cat-label-full {
+    display: none;
+  }
+  .cat-label-short {
+    display: inline;
+  }
+}
+
 .reg-category-desc {
   font-size: 0.8rem;
   color: #64748B;
@@ -844,7 +857,7 @@
   margin-top: 24px;
 }
 
-/* Responsive Breakpoints & Mobile Polish */
+/* Responsive Breakpoints & Mobile Shape Polish */
 @media (max-width: 768px) {
   .site-nav {
     padding: 10px 0;
@@ -863,54 +876,180 @@
     font-size: 0.82rem;
     min-height: 38px;
   }
+
+  /* Compact & Neat Attendance Category Shape Selector on Mobile */
   .reg-category-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .reg-category-card {
+    padding: 11px 6px;
+    border-radius: 12px;
+    align-items: center;
+    text-align: center;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    box-shadow: 0 2px 5px rgba(15, 23, 42, 0.04);
+  }
+  .reg-category-card > div {
+    width: 100%;
+    text-align: center;
+  }
+  .reg-category-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 1.02rem;
+    border-radius: 9px;
+  }
+  .reg-category-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    word-break: break-word;
+  }
+  .reg-category-desc {
+    display: none; /* Hide multi-line secondary text on mobile so category shapes remain slim, neat, and uniformly balanced */
+  }
+
+  /* Container Shapes Polish */
+  .about-card {
+    border-radius: 16px;
+    padding: 24px 20px;
+  }
+  .about-card p {
+    font-size: 1.02rem;
+    line-height: 1.65;
+  }
+  .speakers__grid {
+    gap: 16px;
+  }
+  .speaker-card {
+    border-radius: 16px;
+    padding: 18px;
+  }
+  .speaker-card__photo {
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+  .schedule-day-tab {
+    padding: 8px 16px;
+    border-radius: 999px;
+  }
+  .schedule-day-tab__title {
+    font-size: 0.88rem;
+  }
+  .schedule-day-tab__date {
+    font-size: 0.72rem;
+  }
+  .schedule-active-day-banner {
+    border-radius: 14px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+  }
+  .schedule-active-day-banner h3 {
+    font-size: 1.02rem;
   }
   .form-grid-2 {
     grid-template-columns: 1fr;
     gap: 0;
   }
   .reg-card {
-    padding: 26px 18px;
-    border-radius: 20px;
+    padding: 24px 16px;
+    border-radius: 18px;
   }
   .reg-card-header {
-    padding-bottom: 16px;
-    margin-bottom: 20px;
+    padding-bottom: 14px;
+    margin-bottom: 18px;
   }
   .reg-card-header h3 {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
+  }
+  .reg-card-header p {
+    font-size: 0.88rem;
+  }
+  .reg-badge-pill {
+    font-size: 0.76rem;
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+  .input-group-modern {
+    border-radius: 11px;
+  }
+  .input-icon-badge {
+    width: 40px;
+    font-size: 0.95rem;
+  }
+  .pass-card {
+    border-radius: 16px;
+  }
+  .pass-card-header {
+    padding: 18px 20px;
+  }
+  .pass-card-body {
+    padding: 20px 16px;
+  }
+  .pass-attendee-name {
+    font-size: 1.4rem;
+    margin-bottom: 16px;
   }
   .pass-details-grid {
     grid-template-columns: 1fr;
-    gap: 14px;
+    gap: 12px;
+    padding-bottom: 18px;
+    margin-bottom: 18px;
+  }
+  .pass-detail-item {
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
   }
   .pass-actions {
     flex-direction: column;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .pass-actions .btn {
+    min-height: 44px;
+    border-radius: 11px;
   }
   .hero {
-    padding: 60px 0 70px;
+    padding: 54px 0 62px;
   }
   .hero h1 {
-    font-size: clamp(1.9rem, 7.5vw, 2.7rem);
+    font-size: clamp(1.85rem, 7.2vw, 2.5rem);
   }
   .hero__theme {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
   }
   .hero__meta {
     gap: 8px;
   }
   .hero__meta-item {
-    font-size: 0.88rem;
-    padding: 7px 14px;
+    font-size: 0.85rem;
+    padding: 6px 14px;
+    border-radius: 10px;
     max-width: 100%;
   }
 }
 
 @media (max-width: 540px) {
   .momo-support-card {
-    padding: 16px 14px;
+    padding: 14px 12px;
+    border-radius: 13px;
+    margin: 18px 0 14px;
+  }
+  .momo-support-heart {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+    border-radius: 8px;
+  }
+  .momo-support-title {
+    font-size: 0.88rem;
   }
   .momo-digits-row {
     flex-direction: column;
@@ -918,13 +1057,15 @@
     gap: 8px;
   }
   .momo-number-display {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
     text-align: center;
+    padding: 6px 10px;
   }
   .btn-copy-momo {
     width: 100%;
     justify-content: center;
-    padding: 9px;
+    padding: 8px;
+    border-radius: 9px;
   }
   .pass-momo-content {
     flex-direction: column;
@@ -938,30 +1079,122 @@
 
 @media (max-width: 480px) {
   .section {
-    padding: 56px 0;
-    scroll-margin-top: 70px;
+    padding: 48px 0;
+    scroll-margin-top: 66px;
+  }
+  .section-header {
+    margin-bottom: 24px;
+  }
+  .section-header h2 {
+    font-size: clamp(1.4rem, 5.8vw, 1.8rem);
+    margin-bottom: 6px;
+  }
+  .section-header p {
+    font-size: 0.92rem;
   }
   .hero {
-    padding: 48px 0 54px;
+    padding: 42px 0 48px;
   }
   .hero__eyebrow-pill {
-    font-size: 0.82rem;
-    padding: 5px 14px;
+    font-size: 0.78rem;
+    padding: 5px 12px;
   }
+  .hero__meta-item {
+    font-size: 0.8rem;
+    padding: 5px 12px;
+    border-radius: 8px;
+  }
+  .about-card {
+    padding: 18px 14px;
+    border-radius: 14px;
+  }
+  .speaker-card {
+    padding: 14px;
+    border-radius: 14px;
+  }
+  .schedule-active-day-banner {
+    padding: 10px 13px;
+    border-radius: 11px;
+    margin-bottom: 12px;
+  }
+  .schedule-active-day-banner h3 {
+    font-size: 0.95rem;
+  }
+  .schedule-day-tab {
+    padding: 6px 12px;
+  }
+  .schedule-day-tab__title {
+    font-size: 0.82rem;
+  }
+  .schedule-day-tab__date {
+    font-size: 0.68rem;
+  }
+
+  /* Ultra-sleek Attendance Category Shapes for Small Mobile Screens */
+  .reg-category-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .reg-category-card {
+    padding: 8px 3px;
+    border-radius: 10px;
+    gap: 4px;
+  }
+  .reg-category-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 0.92rem;
+    border-radius: 7px;
+  }
+  .reg-category-title {
+    font-size: 0.72rem;
+    line-height: 1.15;
+  }
+
   .reg-card {
-    padding: 20px 14px;
-    border-radius: 16px;
+    padding: 18px 12px;
+    border-radius: 14px;
+  }
+  .reg-card-header {
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+  }
+  .reg-card-header h3 {
+    font-size: 1.1rem;
+  }
+  .input-group-modern {
+    border-radius: 9px;
+  }
+  .input-icon-badge {
+    width: 36px;
+    font-size: 0.9rem;
   }
   .input-group-modern input {
     font-size: 16px; /* Prevents iOS Safari auto-zoom on input focus */
-    padding: 11px 12px;
+    padding: 10px 10px;
   }
   .btn-submit-reg {
-    min-height: 50px;
-    font-size: 1rem;
+    min-height: 48px;
+    font-size: 0.98rem;
+    border-radius: 11px;
+    padding: 10px 14px;
   }
-  .schedule-active-day-banner {
+  .pass-card {
+    border-radius: 14px;
+  }
+  .pass-card-header {
     padding: 14px 16px;
+  }
+  .pass-card-body {
+    padding: 16px 12px;
+  }
+  .pass-attendee-name {
+    font-size: 1.25rem;
+  }
+  .pass-detail-item {
+    padding: 8px 10px;
+    border-radius: 8px;
   }
 }
 
