@@ -81,6 +81,7 @@ $error = null;
 $responseData = null;
 
 if ($provider === 'arkesel') {
+    // 1. Try v2 JSON API
     $url = 'https://sms.arkesel.com/api/v2/sms/send';
     $payload = json_encode([
         'sender' => $senderId,
@@ -106,9 +107,29 @@ if ($provider === 'arkesel') {
         $ok = true;
         $responseData = $json;
     } else {
-        $error = $json['message'] ?? $response ?? "Arkesel error (HTTP $httpCode)";
+        // 2. Fallback: Try Arkesel v1 Query API (supports legacy keys)
+        $v1Url = "https://sms.arkesel.com/sms/api?action=send-sms&api_key=" . urlencode($apiKey) . "&to=" . urlencode($normPhone) . "&from=" . urlencode($senderId) . "&sms=" . urlencode($message);
+        $ch2 = curl_init($v1Url);
+        curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch2, CURLOPT_SSL_VERIFYPEER, false);
+        $v1Res = curl_exec($ch2);
+        $v1Code = curl_getinfo($ch2, CURLINFO_HTTP_CODE);
+        curl_close($ch2);
+
+        $v1Json = json_decode($v1Res, true);
+        if ($v1Code >= 200 && $v1Code < 300 && (isset($v1Json['code']) && in_array((string)$v1Json['code'], ['ok', '100', '101', '102']))) {
+            if ((string)$v1Json['code'] === 'ok' || (string)$v1Json['code'] === '100') {
+                $ok = true;
+                $responseData = $v1Json;
+            } else {
+                $error = $v1Json['message'] ?? "Arkesel error (Code {$v1Json['code']})";
+            }
+        } else {
+            $error = $json['message'] ?? $v1Json['message'] ?? $v1Res ?? $response ?? "Arkesel error (HTTP $httpCode)";
+        }
     }
 } elseif ($provider === 'mnotify') {
+    // 1. Try v2 quick API
     $url = 'https://api.mnotify.com/api/sms/quick';
     $payload = json_encode([
         'recipient' => [$normPhone],
@@ -135,7 +156,22 @@ if ($provider === 'arkesel') {
         $ok = true;
         $responseData = $json;
     } else {
-        $error = $json['message'] ?? $response ?? "mNotify error (HTTP $httpCode)";
+        // 2. Fallback: Try mNotify v1 API
+        $v1Url = "https://apps.mnotify.net/smsapi?key=" . urlencode($apiKey) . "&to=" . urlencode($normPhone) . "&msg=" . urlencode($message) . "&sender_id=" . urlencode($senderId);
+        $ch2 = curl_init($v1Url);
+        curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch2, CURLOPT_SSL_VERIFYPEER, false);
+        $v1Res = curl_exec($ch2);
+        $v1Code = curl_getinfo($ch2, CURLINFO_HTTP_CODE);
+        curl_close($ch2);
+
+        $v1Json = json_decode($v1Res, true);
+        if ($v1Code >= 200 && $v1Code < 300 && (!isset($v1Json['status']) || $v1Json['status'] !== 'error')) {
+            $ok = true;
+            $responseData = $v1Json ?: $v1Res;
+        } else {
+            $error = $json['message'] ?? $v1Json['message'] ?? $v1Res ?? $response ?? "mNotify error (HTTP $httpCode)";
+        }
     }
 } elseif ($provider === 'hubtel') {
     $auth = base64_encode("{$apiKey}:{$apiSecret}");

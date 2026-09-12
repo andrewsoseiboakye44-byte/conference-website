@@ -180,15 +180,28 @@ async function dispatchToProvider({ phone, message, gateway }) {
     });
 
     const json = await res.json().catch(() => null);
-    if (!res.ok || (json && json.status === 'error')) {
+    if (res.ok && json && json.status !== 'error') {
+      return { ok: true, data: json };
+    }
+
+    // Fallback: Try Arkesel v1 Query API (supports legacy keys)
+    try {
+      const v1Url = `https://sms.arkesel.com/sms/api?action=send-sms&api_key=${encodeURIComponent(apiKey)}&to=${encodeURIComponent(normalizedPhone)}&from=${encodeURIComponent(senderId)}&sms=${encodeURIComponent(message)}`;
+      const v1Res = await fetch(v1Url);
+      const v1Json = await v1Res.json().catch(() => null);
+      if (v1Res.ok && v1Json && (v1Json.code === 'ok' || v1Json.code === '100' || v1Json.code === 100)) {
+        return { ok: true, data: v1Json };
+      }
+      const errMsg = v1Json?.message || json?.message || `Arkesel dispatch failed with HTTP ${res.status}`;
+      return { ok: false, error: errMsg, details: v1Json || json };
+    } catch {
       const errMsg = json?.message || `Arkesel dispatch failed with HTTP ${res.status}`;
       return { ok: false, error: errMsg, details: json };
     }
-    return { ok: true, data: json };
   }
 
   if (provider === 'mnotify') {
-    // mNotify SMS API (Ghana)
+    // mNotify SMS API (Ghana: v2 quick)
     const res = await fetch('https://api.mnotify.com/api/sms/quick', {
       method: 'POST',
       headers: {
@@ -204,11 +217,24 @@ async function dispatchToProvider({ phone, message, gateway }) {
     });
 
     const json = await res.json().catch(() => null);
-    if (!res.ok || (json && json.status === 'error')) {
+    if (res.ok && json && json.status !== 'error') {
+      return { ok: true, data: json };
+    }
+
+    // Fallback: Try mNotify v1 API
+    try {
+      const v1Url = `https://apps.mnotify.net/smsapi?key=${encodeURIComponent(apiKey)}&to=${encodeURIComponent(normalizedPhone)}&msg=${encodeURIComponent(message)}&sender_id=${encodeURIComponent(senderId)}`;
+      const v1Res = await fetch(v1Url);
+      const v1Json = await v1Res.json().catch(() => null);
+      if (v1Res.ok && v1Json && (!v1Json.status || v1Json.status !== 'error')) {
+        return { ok: true, data: v1Json };
+      }
+      const errMsg = v1Json?.message || json?.message || `mNotify send failed with status ${res.status}`;
+      return { ok: false, error: errMsg, details: v1Json || json };
+    } catch {
       const errMsg = json?.message || `mNotify send failed with status ${res.status}`;
       return { ok: false, error: errMsg, details: json };
     }
-    return { ok: true, data: json };
   }
 
   if (provider === 'hubtel') {

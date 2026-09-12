@@ -143,6 +143,73 @@ async function callServerProxy(payload) {
 }
 
 /**
+ * Direct browser fallback for providers that allow browser CORS (e.g. Arkesel, mNotify)
+ */
+async function directBrowserDispatch({ phone, message, gateway }) {
+  const provider = (gateway.provider || 'custom').toLowerCase();
+  const apiKey = (gateway.api_key || '').trim();
+  const senderId = (gateway.sender_id || 'CONFERENCE').trim();
+
+  if (provider === 'arkesel') {
+    // 1. Try v2 JSON API
+    try {
+      const res = await fetch('https://sms.arkesel.com/api/v2/sms/send', {
+        method: 'POST',
+        headers: {
+          'api-key': apiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sender: senderId,
+          message: message,
+          recipients: [phone],
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data && data.status !== 'error') return { ok: true, data };
+    } catch {}
+
+    // 2. Try v1 Query API
+    const v1Url = `https://sms.arkesel.com/sms/api?action=send-sms&api_key=${encodeURIComponent(apiKey)}&to=${encodeURIComponent(phone)}&from=${encodeURIComponent(senderId)}&sms=${encodeURIComponent(message)}`;
+    const v1Res = await fetch(v1Url);
+    const v1Data = await v1Res.json().catch(() => null);
+    if (v1Res.ok && v1Data && (v1Data.code === 'ok' || v1Data.code === '100' || v1Data.code === 100)) {
+      return { ok: true, data: v1Data };
+    }
+    throw new Error(v1Data?.message || 'Arkesel dispatch failed');
+  }
+
+  if (provider === 'mnotify') {
+    // 1. Try v2 quick API
+    try {
+      const res = await fetch('https://api.mnotify.com/api/sms/quick', {
+        method: 'POST',
+        headers: { 'key': apiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipient: [phone],
+          sender: senderId,
+          message,
+          is_schedule: false,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data && data.status !== 'error') return { ok: true, data };
+    } catch {}
+
+    // 2. Try v1 Query API
+    const v1Url = `https://apps.mnotify.net/smsapi?key=${encodeURIComponent(apiKey)}&to=${encodeURIComponent(phone)}&msg=${encodeURIComponent(message)}&sender_id=${encodeURIComponent(senderId)}`;
+    const v1Res = await fetch(v1Url);
+    const v1Data = await v1Res.json().catch(() => null);
+    if (v1Res.ok && v1Data && (!v1Data.status || v1Data.status !== 'error')) {
+      return { ok: true, data: v1Data };
+    }
+    throw new Error(v1Data?.message || 'mNotify dispatch failed');
+  }
+
+  throw new Error('Direct browser dispatch not available for this provider.');
+}
+
+/**
  * Universal SMS Dispatcher.
  * Dispatches via server-side proxies to prevent CORS blocks and ensure
  * instant delivery. Logs results to Supabase sms_logs table.
@@ -174,9 +241,18 @@ export async function dispatchDirectSms({
       gateway: gw,
       campaign_type: campaignType,
     });
-  } catch (err) {
-    status = 'failed';
-    errorMessage = err.message || String(err);
+  } catch (proxyErr) {
+    // Secondary fallback: Direct browser dispatch
+    try {
+      await directBrowserDispatch({
+        phone: normalizedPhone,
+        message,
+        gateway: gw,
+      });
+    } catch (directErr) {
+      status = 'failed';
+      errorMessage = directErr.message || proxyErr.message || String(proxyErr);
+    }
   }
 
   // Client-side audit log fallback into Supabase sms_logs table
