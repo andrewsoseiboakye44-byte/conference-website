@@ -290,6 +290,29 @@ async function dispatchToProvider({ phone, message, gateway }) {
     return { ok: true, data: json };
   }
 
+  if (provider === 'vonage') {
+    // Vonage / Nexmo SMS API
+    const res = await fetch('https://rest.nexmo.com/sms/json', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        api_key: apiKey,
+        api_secret: apiSecret,
+        to: normalizedPhone,
+        from: senderId,
+        text: message,
+      }),
+    });
+
+    const json = await res.json().catch(() => null);
+    const msgStatus = json?.messages?.[0]?.status;
+    if (!res.ok || msgStatus !== '0') {
+      const errMsg = json?.messages?.[0]?.['error-text'] || `Vonage send failed (${res.status})`;
+      return { ok: false, error: errMsg, details: json };
+    }
+    return { ok: true, data: json };
+  }
+
   // Custom Gateway / Universal HTTP API
   const endpoint = gateway.endpoint_url || 'https://api.smsghana.com/v1/sms/send';
   let finalUrl = endpoint

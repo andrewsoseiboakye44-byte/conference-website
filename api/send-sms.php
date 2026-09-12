@@ -194,6 +194,64 @@ if ($provider === 'arkesel') {
     } else {
         $error = $recip['status'] ?? $json['SMSMessageData']['Message'] ?? "Africa's Talking error (HTTP $httpCode)";
     }
+} elseif ($provider === 'twilio') {
+    $accountSid = $apiSecret;
+    $url = "https://api.twilio.com/2010-04-01/Accounts/{$accountSid}/Messages.json";
+    $auth = base64_encode("{$accountSid}:{$apiKey}");
+    $postData = http_build_query([
+        'To' => '+' . $normPhone,
+        'From' => $senderId,
+        'Body' => $message,
+    ]);
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        "Authorization: Basic {$auth}",
+        'Content-Type: application/x-www-form-urlencoded'
+    ]);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    $json = json_decode($response, true);
+    if ($httpCode >= 200 && $httpCode < 300) {
+        $ok = true;
+        $responseData = $json;
+    } else {
+        $error = $json['message'] ?? "Twilio error (HTTP $httpCode)";
+    }
+} elseif ($provider === 'vonage') {
+    $url = 'https://rest.nexmo.com/sms/json';
+    $payload = json_encode([
+        'api_key' => $apiKey,
+        'api_secret' => $apiSecret,
+        'to' => $normPhone,
+        'from' => $senderId,
+        'text' => $message
+    ]);
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    $json = json_decode($response, true);
+    $msgStatus = $json['messages'][0]['status'] ?? null;
+    if ($httpCode >= 200 && $httpCode < 300 && $msgStatus === '0') {
+        $ok = true;
+        $responseData = $json;
+    } else {
+        $error = $json['messages'][0]['error-text'] ?? "Vonage error (HTTP $httpCode)";
+    }
 } else {
     // Custom URL gateway
     $endpoint = $gateway['endpoint_url'] ?? 'https://api.smsghana.com/v1/sms/send';
