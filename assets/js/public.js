@@ -6,6 +6,7 @@
 
 import { supabase } from './config.js';
 import { formatPhoneNumber, isValidPhoneNumber, showToast, escapeHtml, formatDate } from './utils.js';
+import { sendRegistrationConfirmationSms } from './sms.js';
 
 let currentCategory = 'person';
 
@@ -668,12 +669,12 @@ async function handleSubmit(e) {
     return;
   }
 
-  // Fire-and-forget confirmation SMS via Edge Function if registrant ID is available.
-  if (data?.id) {
-    supabase.functions.invoke('send-sms', {
-      body: { type: 'confirmation', registrant_id: data.id },
-    }).catch((err) => console.warn('Confirmation SMS failed to dispatch', err));
-  }
+  // Send instant registration confirmation SMS to attendee
+  sendRegistrationConfirmationSms({
+    fullName,
+    phone,
+    registrantId: data?.id,
+  }).catch((err) => console.warn('Confirmation SMS failed to dispatch:', err));
 
   // Populate digital pass confirmation preview
   const passName = document.getElementById('pass-attendee-name');

@@ -6,15 +6,23 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
  */
 export async function decrypt(ciphertextB64: string | null): Promise<string> {
   if (!ciphertextB64) return '';
-  const raw = Uint8Array.from(atob(Deno.env.get('ENCRYPTION_KEY')!), (c) => c.charCodeAt(0));
-  const key = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']);
+  const encKey = Deno.env.get('ENCRYPTION_KEY');
+  if (!encKey) return ciphertextB64; // Fallback: unencrypted plaintext
 
-  const combined = Uint8Array.from(atob(ciphertextB64), (c) => c.charCodeAt(0));
-  const iv = combined.slice(0, 12);
-  const ciphertext = combined.slice(12);
+  try {
+    const raw = Uint8Array.from(atob(encKey), (c) => c.charCodeAt(0));
+    const key = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']);
 
-  const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
-  return new TextDecoder().decode(plaintext);
+    const combined = Uint8Array.from(atob(ciphertextB64), (c) => c.charCodeAt(0));
+    const iv = combined.slice(0, 12);
+    const ciphertext = combined.slice(12);
+
+    const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
+    return new TextDecoder().decode(plaintext);
+  } catch {
+    // If decryption fails (e.g. key was stored plaintext), return as-is
+    return ciphertextB64;
+  }
 }
 
 /**

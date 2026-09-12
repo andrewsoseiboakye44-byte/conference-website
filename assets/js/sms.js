@@ -1,8 +1,9 @@
 // ============================================================
 // sms.js — Universal SMS Gateway Engine & Dispatcher.
 // Supports Africa's Talking, Hubtel, Arkesel, mNotify, Twilio,
-// and any Custom Gateway HTTP API directly with Edge Function
-// fallback and comprehensive sms_logs auditing.
+// Vonage, and any Custom Gateway HTTP API.
+// Eliminates browser CORS issues using serverless & server proxies
+// with complete fallback and comprehensive audit logging.
 // ============================================================
 
 import { supabase } from './config.js';
@@ -24,14 +25,13 @@ export async function getActiveGateway() {
       .maybeSingle();
 
     if (!error && data) {
-      // Check if local storage has key/secret override if encrypted
       const cached = getLocalGatewayConfig();
       if (cached && cached.provider === data.provider) {
         return {
           ...data,
           api_key: cached.api_key || data.api_key_encrypted,
           api_secret: cached.api_secret || data.api_secret_encrypted,
-          endpoint_url: cached.endpoint_url || null,
+          endpoint_url: cached.endpoint_url || data.endpoint_url || null,
         };
       }
       return {
@@ -68,201 +68,191 @@ export function getLocalGatewayConfig() {
 }
 
 /**
- * Universal SMS Dispatcher.
- * Directly communicates with Africa's Talking, Arkesel, Hubtel,
- * mNotify, Twilio, or any custom REST/HTTP endpoint.
+ * Calls backend server proxy (Netlify Function or PHP proxy)
+ * to execute SMS dispatch from server-side without CORS limitations.
  */
-export async function dispatchDirectSms({ phone, message, gateway = null, campaignType = 'manual_send' }) {
+async function callServerProxy(payload) {
+  let lastError = null;
+
+  // 1. Try Netlify Functions endpoint (Production / Netlify CLI)
+  try {
+    const netlifyRes = await fetch('/.netlify/functions/send-sms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (netlifyRes.status !== 404) {
+      const json = await netlifyRes.json().catch(() => null);
+      if (!netlifyRes.ok || (json && json.ok === false)) {
+        throw new Error(json?.error || `SMS gateway dispatch failed (HTTP ${netlifyRes.status})`);
+      }
+      return { ok: true, data: json };
+    }
+  } catch (err) {
+    lastError = err;
+    if (err.message && !err.message.includes('404') && !err.message.includes('Failed to fetch')) {
+      throw err; // Real provider error returned by proxy
+    }
+  }
+
+  // 2. Try PHP proxy (for local Apache / XAMPP environments)
+  try {
+    // Resolve relative path to root api/send-sms.php
+    const pathParts = window.location.pathname.split('/').filter(Boolean);
+    // Find project folder name if in subfolder (e.g. /conference-website/)
+    let phpUrl = '/api/send-sms.php';
+    if (pathParts.length > 0 && !pathParts[0].includes('.')) {
+      phpUrl = `/${pathParts[0]}/api/send-sms.php`;
+    }
+
+    const phpRes = await fetch(phpUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (phpRes.status !== 404) {
+      const json = await phpRes.json().catch(() => null);
+      if (!phpRes.ok || (json && json.ok === false)) {
+        throw new Error(json?.error || `Local SMS proxy failed (HTTP ${phpRes.status})`);
+      }
+      return { ok: true, data: json };
+    }
+  } catch (err) {
+    lastError = err;
+    if (err.message && !err.message.includes('404') && !err.message.includes('Failed to fetch')) {
+      throw err;
+    }
+  }
+
+  // 3. Try Supabase Edge Function test-sms / send-sms
+  if (payload.action === 'test') {
+    try {
+      const fnRes = await supabase.functions.invoke('test-sms', { body: { phone: payload.phone } });
+      if (!fnRes.error && fnRes.data) {
+        return { ok: true, data: fnRes.data };
+      }
+      if (fnRes.error?.message) {
+        lastError = new Error(fnRes.error.message);
+      }
+    } catch (e) {
+      lastError = e;
+    }
+  }
+
+  throw lastError || new Error('Unable to connect to SMS proxy. Please check your network and gateway configuration.');
+}
+
+/**
+ * Universal SMS Dispatcher.
+ * Dispatches via server-side proxies to prevent CORS blocks and ensure
+ * instant delivery. Logs results to Supabase sms_logs table.
+ */
+export async function dispatchDirectSms({
+  phone,
+  message,
+  gateway = null,
+  campaignType = 'manual_send',
+  action = 'send',
+}) {
   const gw = gateway || await getActiveGateway();
   if (!gw || !gw.api_key) {
     return {
       status: 'failed',
-      errorMessage: 'No active SMS gateway configured. Please configure your API key and Sender ID in SMS Gateway settings.',
+      errorMessage: 'No active SMS gateway configured. Please save your API Key and Sender ID in SMS Gateway settings.',
     };
   }
 
   const normalizedPhone = formatPhoneNumber(phone);
-  const senderId = gw.sender_id || 'CONFERENCE';
-  const apiKey = gw.api_key;
-  const apiSecret = gw.api_secret || '';
-  const provider = gw.provider || 'custom';
-
   let status = 'sent';
   let errorMessage = null;
 
   try {
-    if (provider === 'arkesel') {
-      // Arkesel SMS API (Ghana: v2 SMS API)
-      const url = `https://sms.arkesel.com/api/v2/sms/send`;
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'api-key': apiKey,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          sender: senderId,
-          message: message,
-          recipients: [normalizedPhone],
-        }),
-      });
-      const data = await res.json().catch(() => null);
-      if (!res.ok || (data && data.status && data.status !== 'success')) {
-        throw new Error(data?.message || `Arkesel dispatch failed with HTTP ${res.status}`);
-      }
-    } else if (provider === 'hubtel') {
-      // Hubtel SMS API
-      const authHeader = btoa(`${apiKey}:${apiSecret}`);
-      const params = new URLSearchParams({
-        From: senderId,
-        To: normalizedPhone,
-        Content: message,
-        ClientId: apiKey,
-        ClientSecret: apiSecret,
-      });
-      const url = `https://smsc.hubtel.com/v1/messages/send?${params.toString()}`;
-      const res = await fetch(url, {
-        method: 'GET',
-        headers: {
-          Authorization: `Basic ${authHeader}`,
-        },
-      });
-      if (!res.ok) {
-        const text = await res.text().catch(() => '');
-        throw new Error(`Hubtel dispatch failed (${res.status}): ${text}`);
-      }
-    } else if (provider === 'mnotify') {
-      // mNotify SMS API (Ghana)
-      const res = await fetch(`https://api.mnotify.com/api/sms/quick`, {
-        method: 'POST',
-        headers: {
-          'key': apiKey,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          recipient: [normalizedPhone],
-          sender: senderId,
-          message: message,
-          is_schedule: false,
-        }),
-      });
-      const json = await res.json().catch(() => null);
-      if (!res.ok || (json && json.status === 'error')) {
-        throw new Error(json?.message || `mNotify send failed with status ${res.status}`);
-      }
-    } else if (provider === 'africastalking') {
-      // Africa's Talking
-      const res = await fetch('https://api.africastalking.com/version1/messaging', {
-        method: 'POST',
-        headers: {
-          apiKey,
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Accept: 'application/json',
-        },
-        body: new URLSearchParams({
-          username: apiSecret || 'sandbox',
-          to: `+${normalizedPhone}`,
-          message,
-          from: senderId,
-        }),
-      });
-      const json = await res.json().catch(() => null);
-      const recipient = json?.SMSMessageData?.Recipients?.[0];
-      if (!res.ok || (recipient && recipient.status !== 'Success')) {
-        throw new Error(recipient?.status ?? json?.SMSMessageData?.Message ?? `Africa's Talking send failed (${res.status})`);
-      }
-    } else if (provider === 'twilio') {
-      // Twilio SMS
-      const accountSid = apiSecret;
-      const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Basic ${btoa(`${accountSid}:${apiKey}`)}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          To: `+${normalizedPhone}`,
-          From: senderId,
-          Body: message,
-        }),
-      });
-      if (!res.ok) {
-        const text = await res.text().catch(() => '');
-        throw new Error(`Twilio dispatch failed (${res.status}): ${text}`);
-      }
-    } else {
-      // Custom Gateway / Universal HTTP API
-      const endpoint = gw.endpoint_url || `https://api.smsghana.com/v1/sms/send`;
-      let finalUrl = endpoint
-        .replace(/\{API_KEY\}/g, encodeURIComponent(apiKey))
-        .replace(/\{SENDER_ID\}/g, encodeURIComponent(senderId))
-        .replace(/\{TO\}/g, encodeURIComponent(normalizedPhone))
-        .replace(/\{MESSAGE\}/g, encodeURIComponent(message));
-
-      // If URL didn't have placeholders, attach standard query params
-      if (!finalUrl.includes(encodeURIComponent(normalizedPhone))) {
-        const sep = finalUrl.includes('?') ? '&' : '?';
-        finalUrl += `${sep}key=${encodeURIComponent(apiKey)}&sender=${encodeURIComponent(senderId)}&to=${encodeURIComponent(normalizedPhone)}&message=${encodeURIComponent(message)}`;
-      }
-
-      const res = await fetch(finalUrl, { method: 'GET' });
-      if (!res.ok) {
-        const text = await res.text().catch(() => '');
-        throw new Error(`Custom Gateway failed (${res.status}): ${text}`);
-      }
-    }
+    await callServerProxy({
+      action,
+      phone: normalizedPhone,
+      message,
+      gateway: gw,
+      campaign_type: campaignType,
+    });
   } catch (err) {
     status = 'failed';
-    errorMessage = String(err.message || err);
+    errorMessage = err.message || String(err);
   }
 
-  // Audit log into Supabase sms_logs table
+  // Client-side audit log fallback into Supabase sms_logs table
   try {
     const { data: userRes } = await supabase.auth.getUser();
-    const payload = {
+    await supabase.from('sms_logs').insert({
       recipient_phone: normalizedPhone,
       message,
       campaign_type: campaignType,
       status,
-      provider: provider,
+      provider: gw.provider || 'custom',
       error_message: errorMessage,
       sent_by: userRes?.user?.id || null,
       sent_at: new Date().toISOString(),
-    };
-
-    const { error: logErr } = await supabase.from('sms_logs').insert(payload);
-    if (logErr && (logErr.message?.includes('campaign_type') || logErr.code === '23514')) {
-      // Fallback for unmigrated database constraint
-      payload.campaign_type = 'invite_contacts';
-      await supabase.from('sms_logs').insert(payload);
-    }
+    });
   } catch (logErr) {
-    console.warn('Could not write log to public.sms_logs:', logErr);
+    console.warn('Could not write log to sms_logs:', logErr);
   }
 
   return { status, errorMessage };
 }
 
 /**
- * Triggers a campaign send. Tries Edge Function first, and falls
- * back to direct client-side provider dispatch if Edge Function is
- * unavailable or not deployed.
+ * Sends a one-off test SMS to verify gateway credentials.
+ * Supports passing a temporary gateway config directly (e.g. from unsaved form).
  */
-export async function sendCampaign(campaignType, extra = {}) {
-  // 1. Try Edge Function
-  try {
-    const res = await supabase.functions.invoke('send-bulk-sms', {
-      body: { campaign_type: campaignType, ...extra },
-    });
-    if (!res.error && res.data) {
-      return res;
-    }
-    console.warn('Edge Function returned error, using direct gateway fallback:', res.error);
-  } catch (err) {
-    console.warn('Edge Function unreachable, invoking direct gateway fallback:', err);
+export async function sendTestSms(phone, gatewayOverride = null) {
+  const gw = gatewayOverride || await getActiveGateway();
+  if (!gw || !gw.api_key) {
+    return {
+      error: { message: 'No active gateway configured. Please enter your API Key first.' },
+    };
   }
 
-  // 2. Client-side fallback dispatch to all targeted contacts
+  const res = await dispatchDirectSms({
+    phone,
+    message: `Test SMS from ${gw.sender_id || 'Conference Gateway'}! Your gateway credentials are functioning properly.`,
+    gateway: gw,
+    campaignType: 'test_sms',
+    action: 'test',
+  });
+
+  if (res.status === 'failed') {
+    return { error: { message: res.errorMessage || 'Failed to dispatch test SMS' } };
+  }
+
+  return { data: { ok: true }, error: null };
+}
+
+/**
+ * Helper to dispatch registration confirmation SMS to newly registered attendee.
+ */
+export async function sendRegistrationConfirmationSms({ fullName, phone, registrantId = null }) {
+  if (!phone) return { status: 'failed', errorMessage: 'No phone number provided' };
+
+  // Fetch conference title from settings if available
+  let confName = 'the Annual Conference';
+  try {
+    const { data } = await supabase.from('conference_settings').select('conference_name').limit(1).maybeSingle();
+    if (data?.conference_name) confName = data.conference_name;
+  } catch {}
+
+  const msg = `Hi ${fullName || 'there'}, your registration for ${confName} is confirmed! We look forward to seeing you.`;
+
+  return dispatchDirectSms({
+    phone,
+    message: msg,
+    campaignType: 'auto_confirmation',
+    action: 'send',
+  });
+}
+
+/**
+ * Triggers a campaign send to all targeted contacts with detailed progress.
+ */
+export async function sendCampaign(campaignType, extra = {}) {
   const gw = await getActiveGateway();
   if (!gw || !gw.api_key) {
     return {
@@ -293,7 +283,16 @@ export async function sendCampaign(campaignType, extra = {}) {
     return { error: fetchErr };
   }
 
+  if (recipients.length === 0) {
+    return {
+      error: { message: 'No contacts found for this audience group. Please add registrants or invite contacts first.' },
+    };
+  }
+
   let sent = 0;
+  let failed = 0;
+  let lastError = null;
+
   for (const phone of recipients) {
     const result = await dispatchDirectSms({
       phone,
@@ -301,42 +300,21 @@ export async function sendCampaign(campaignType, extra = {}) {
       gateway: gw,
       campaignType,
     });
-    if (result.status === 'sent') sent++;
-  }
-
-  return { data: { sent, total: recipients.length }, error: null };
-}
-
-/** Sends a one-off test SMS to verify the active gateway's credentials. */
-export async function sendTestSms(phone) {
-  // 1. Try Edge Function test-sms
-  try {
-    const res = await supabase.functions.invoke('test-sms', { body: { phone } });
-    if (!res.error && res.data) {
-      return res;
+    if (result.status === 'sent') {
+      sent++;
+    } else {
+      failed++;
+      lastError = result.errorMessage;
     }
-  } catch {
-    // proceed to direct fallback
   }
 
-  // 2. Direct dispatch fallback
-  const gw = await getActiveGateway();
-  if (!gw || !gw.api_key) {
-    return { error: { message: 'No active gateway configured. Please save your API Key first.' } };
+  if (sent === 0 && failed > 0) {
+    return {
+      error: { message: `All ${failed} messages failed to dispatch: ${lastError || 'Check provider credentials and balance.'}` },
+    };
   }
 
-  const res = await dispatchDirectSms({
-    phone,
-    message: `Test SMS from ${gw.sender_id || 'Conference Gateway'}! Your gateway is active and configured properly.`,
-    gateway: gw,
-    campaignType: 'test_sms',
-  });
-
-  if (res.status === 'failed') {
-    return { error: { message: res.errorMessage || 'Failed to dispatch test SMS' } };
-  }
-
-  return { data: { ok: true }, error: null };
+  return { data: { sent, failed, total: recipients.length }, error: null };
 }
 
 export async function fetchSmsLogs(limit = 60) {
@@ -346,4 +324,3 @@ export async function fetchSmsLogs(limit = 60) {
     .order('sent_at', { ascending: false })
     .limit(limit);
 }
-

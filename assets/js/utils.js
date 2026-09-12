@@ -10,13 +10,17 @@ import { APP_CONFIG } from './config.js';
  */
 export function formatPhoneNumber(raw) {
   if (!raw) return '';
-  let digits = raw.replace(/\D/g, '');
+  const trimmed = String(raw).trim();
+  let digits = trimmed.replace(/\D/g, '');
 
+  if (trimmed.startsWith('+')) {
+    return digits;
+  }
   if (digits.startsWith('00')) {
     digits = digits.slice(2);
   } else if (digits.startsWith('0')) {
     digits = APP_CONFIG.phoneCountryPrefix + digits.slice(1);
-  } else if (!digits.startsWith(APP_CONFIG.phoneCountryPrefix)) {
+  } else if (!digits.startsWith(APP_CONFIG.phoneCountryPrefix) && digits.length <= 10) {
     digits = APP_CONFIG.phoneCountryPrefix + digits;
   }
   return digits;

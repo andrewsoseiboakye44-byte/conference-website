@@ -297,7 +297,16 @@ async function handleTest() {
     testBtn.innerHTML = '<span class="spin-animation"><i class="bi bi-arrow-repeat"></i></span> Dispatching test…';
   }
 
-  const { error } = await sendTestSms(phone.trim());
+  // Use current form inputs so test works immediately with the exact entered credentials
+  const currentConfig = {
+    provider: document.getElementById('gw-provider')?.value || 'custom',
+    sender_id: document.getElementById('gw-sender')?.value.trim() || 'CONFERENCE',
+    api_key: document.getElementById('gw-key')?.value.trim() || '',
+    api_secret: document.getElementById('gw-secret')?.value.trim() || '',
+    endpoint_url: document.getElementById('gw-endpoint')?.value.trim() || '',
+  };
+
+  const { error } = await sendTestSms(phone.trim(), currentConfig.api_key ? currentConfig : null);
 
   if (testBtn) {
     testBtn.disabled = false;

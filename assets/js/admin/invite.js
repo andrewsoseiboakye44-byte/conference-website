@@ -11,6 +11,7 @@
 import { supabase } from '../config.js';
 import { formatPhoneNumber, showToast, escapeHtml, formatDate, formatTime } from '../utils.js';
 import { renderQrCode } from '../qrcode.js';
+import { dispatchDirectSms } from '../sms.js';
 
 let parsedContacts = [];
 let allContacts = [];
@@ -277,31 +278,26 @@ async function handleSingleContact(sendSmsImmediately = false) {
     if (insertError) throw insertError;
 
     if (sendSmsImmediately) {
-      // Send single invitation SMS via Edge function or gateway
       const message = document.getElementById('invite-template')?.value.trim() ||
         `You are warmly invited to our Conference! Register here: ${regUrl}`;
 
-      try {
-        await supabase.functions.invoke('send-bulk-sms', {
-          body: {
-            campaign_type: 'invite_contacts',
-            batch_label: batchLabel,
-            message,
-          },
-        });
-      } catch (fnErr) {
-        console.warn('SMS dispatch via Edge function failed, marking record:', fnErr);
-      }
+      const smsResult = await dispatchDirectSms({
+        phone: formattedPhone,
+        message,
+        campaignType: 'invite_contacts',
+      });
 
-      // Mark SMS sent on invitation record
-      if (inserted?.id) {
-        await supabase
-          .from('invitations')
-          .update({ sms_sent: true, sms_sent_at: new Date().toISOString() })
-          .eq('id', inserted.id);
+      if (smsResult.status === 'sent') {
+        if (inserted?.id) {
+          await supabase
+            .from('invitations')
+            .update({ sms_sent: true, sms_sent_at: new Date().toISOString() })
+            .eq('id', inserted.id);
+        }
+        showToast(`Contact saved and invitation SMS sent to ${formattedPhone}!`, 'success');
+      } else {
+        showToast(`Contact saved, but SMS failed: ${smsResult.errorMessage || 'Check gateway'}`, 'error');
       }
-
-      showToast(`Contact saved and invitation SMS dispatched to ${formattedPhone}!`, 'success');
     } else {
       showToast(`Contact ${formattedPhone} added to directory!`, 'success');
     }
@@ -591,30 +587,50 @@ async function handleSendBulk() {
       if (insertError) throw insertError;
     }
 
-    // 2. Invoke SMS dispatch Edge Function
-    let smsDispatched = true;
+    // 2. Dispatch SMS invitations
+    let smsDispatched = false;
     try {
       const { error: fnError } = await supabase.functions.invoke('send-bulk-sms', {
         body: { campaign_type: 'invite_contacts', batch_label: batchLabel, message },
       });
-      if (fnError) {
-        console.warn('send-bulk-sms edge function error:', fnError);
-        smsDispatched = false;
+      if (!fnError) {
+        smsDispatched = true;
       }
-    } catch (dispatchErr) {
-      console.warn('Exception calling send-bulk-sms:', dispatchErr);
+    } catch {
       smsDispatched = false;
     }
 
-    // 3. Mark batch sent if dispatch triggered
+    let sentCount = 0;
+    let failedCount = 0;
+    let lastError = null;
+
+    if (!smsDispatched) {
+      // Fallback: Dispatch directly via serverless/PHP proxy
+      for (const contact of parsedContacts) {
+        const res = await dispatchDirectSms({
+          phone: contact.phone,
+          message,
+          campaignType: 'invite_contacts',
+        });
+        if (res.status === 'sent') {
+          sentCount++;
+        } else {
+          failedCount++;
+          lastError = res.errorMessage;
+        }
+      }
+      if (sentCount > 0) smsDispatched = true;
+    }
+
+    // 3. Mark batch sent if dispatch succeeded
     if (smsDispatched) {
       await supabase
         .from('invitations')
         .update({ sms_sent: true, sms_sent_at: new Date().toISOString() })
         .eq('batch_label', batchLabel);
-      showToast(`Success! ${parsedContacts.length} contacts saved and invitations dispatched.`, 'success');
+      showToast(`Success! ${parsedContacts.length} contacts saved and invitations sent.`, 'success');
     } else {
-      showToast(`Batch saved (${parsedContacts.length} contacts). Check SMS Gateway settings to ensure provider credentials are active.`, 'info');
+      showToast(`Batch saved, but SMS dispatch failed: ${lastError || 'Check SMS Gateway credentials'}`, 'error');
     }
 
     // Reset bulk form

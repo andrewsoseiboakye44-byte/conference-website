@@ -6,6 +6,7 @@
 
 import { supabase } from '../config.js';
 import { formatPhoneNumber, isValidPhoneNumber, debounce, downloadCsv, showToast, escapeHtml } from '../utils.js';
+import { sendRegistrationConfirmationSms } from '../sms.js';
 
 let manualCategory = 'person';
 
@@ -263,12 +264,12 @@ async function handleManualRegister(e) {
       }
     }
 
-    // Fire-and-forget confirmation SMS via Edge Function
-    if (newReg?.id) {
-      supabase.functions.invoke('send-sms', {
-        body: { type: 'confirmation', registrant_id: newReg.id }
-      }).catch((smsErr) => console.warn('Confirmation SMS failed to dispatch:', smsErr));
-    }
+    // Fire-and-forget confirmation SMS via proxy
+    sendRegistrationConfirmationSms({
+      fullName,
+      phone,
+      registrantId: newReg?.id,
+    }).catch((smsErr) => console.warn('Confirmation SMS failed to dispatch:', smsErr));
 
     showToast(`Successfully registered ${fullName}!`, 'success');
     form.reset();
