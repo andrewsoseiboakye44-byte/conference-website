@@ -871,25 +871,30 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 14px 16px;
-  background: linear-gradient(135deg, #EFF6FF 0%, #F8FAFC 100%);
-  border: 1.5px solid #BFDBFE;
+  padding: 11px 14px;
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
   border-radius: 12px;
-  margin: 10px 0 18px;
+  margin: 8px 0 18px;
   cursor: pointer;
-  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.08), 0 1px 3px rgba(15, 23, 42, 0.03);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
   transition: all 0.2s ease;
 }
 
 .welcome-gift-card:hover {
-  border-color: #60A5FA;
+  border-color: #93C5FD;
+  background: #F0F7FF;
+}
+
+.welcome-gift-card:has(input[type="checkbox"]:checked) {
+  border-color: #2563EB;
   background: #EFF6FF;
 }
 
 .welcome-gift-card input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  margin-top: 2px;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
   accent-color: #2563EB;
   cursor: pointer;
   flex-shrink: 0;
@@ -901,17 +906,22 @@
 
 .welcome-gift-title {
   font-weight: 700;
-  color: #1D4ED8;
-  font-size: 0.9rem;
+  color: #1E293B;
+  font-size: 0.88rem;
   margin-bottom: 2px;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
+.welcome-gift-title i {
+  color: #2563EB;
+  font-size: 1rem;
+}
+
 .welcome-gift-desc {
-  font-size: 0.8rem;
-  color: #475569;
+  font-size: 0.78rem;
+  color: #64748B;
   margin: 0;
   line-height: 1.35;
 }

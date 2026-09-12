@@ -490,32 +490,35 @@
   gap: 18px;
 }
 
-/* Welcome Gift Checkbox Box */
+/* First-Time Attendee Checkbox Card */
 .welcome-gift-card {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
-  padding: 16px 18px;
-  background: linear-gradient(135deg, #EFF6FF 0%, #F8FAFC 100%);
-  border: 1.5px solid #BFDBFE;
-  border-radius: 14px;
-  margin: 10px 0 26px;
+  gap: 12px;
+  padding: 11px 14px;
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+  margin: 6px 0 20px;
   cursor: pointer;
-  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.08), 0 1px 3px rgba(15, 23, 42, 0.03);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .welcome-gift-card:hover {
-  border-color: #60A5FA;
+  border-color: #93C5FD;
+  background: #F0F7FF;
+}
+
+.welcome-gift-card:has(input[type="checkbox"]:checked) {
+  border-color: #2563EB;
   background: #EFF6FF;
-  box-shadow: 0 8px 22px rgba(37, 99, 235, 0.16), 0 2px 6px rgba(15, 23, 42, 0.04);
-  transform: translateY(-1px);
 }
 
 .welcome-gift-card input[type="checkbox"] {
-  width: 22px;
-  height: 22px;
-  margin-top: 2px;
+  width: 19px;
+  height: 19px;
+  margin-top: 1px;
   accent-color: #2563EB;
   cursor: pointer;
   flex-shrink: 0;
@@ -527,19 +530,24 @@
 
 .welcome-gift-title {
   font-weight: 700;
-  color: #1D4ED8;
-  font-size: 0.95rem;
+  color: #1E293B;
+  font-size: 0.88rem;
   margin-bottom: 2px;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
+.welcome-gift-title i {
+  color: #2563EB;
+  font-size: 1rem;
+}
+
 .welcome-gift-desc {
-  font-size: 0.85rem;
-  color: #475569;
+  font-size: 0.78rem;
+  color: #64748B;
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 /* Submit Button */
