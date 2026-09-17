@@ -31,7 +31,7 @@ if (empty($username) || empty($password) || strlen($password) < 6) {
 }
 
 $cleanUsername = preg_replace('/[^a-z0-9_.-]/', '', $username);
-$email = "{$cleanUsername}@usher.local";
+$email = "{$cleanUsername}@usher.conference.com";
 $supabaseUrl = 'https://rhdqrocagrkogbztwpmg.supabase.co';
 $anonKey = 'sb_publishable_rmQ97GXrUaGcsGIIFrdUeg_zj_5gfeI';
 

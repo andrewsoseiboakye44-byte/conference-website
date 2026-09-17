@@ -34,6 +34,37 @@ export async function initUsers() {
         }
       });
     });
+
+    // Wire Generate Password button
+    const genPwdBtn = document.getElementById('btn-generate-usher-pwd');
+    if (genPwdBtn && !genPwdBtn.dataset.bound) {
+      genPwdBtn.dataset.bound = 'true';
+      genPwdBtn.addEventListener('click', () => {
+        const randomNum = Math.floor(1000 + Math.random() * 9000);
+        const generated = `Usher@${randomNum}`;
+        const pwdInput = document.getElementById('usher-password-new');
+        if (pwdInput) {
+          pwdInput.type = 'text';
+          pwdInput.value = generated;
+          navigator.clipboard?.writeText(generated);
+          showToast(`Password generated: ${generated} (copied to clipboard)`, 'info');
+        }
+      });
+    }
+
+    // Wire Copy Usher Credentials button
+    const copyCredsBtn = document.getElementById('btn-copy-usher-creds');
+    if (copyCredsBtn && !copyCredsBtn.dataset.bound) {
+      copyCredsBtn.dataset.bound = 'true';
+      copyCredsBtn.addEventListener('click', () => {
+        const u = document.getElementById('created-usher-user')?.textContent || '';
+        const p = document.getElementById('created-usher-pass')?.textContent || '';
+        const loginUrl = `${window.location.origin}/login.html`;
+        const text = `Door Usher Login Credentials:\nSign In Link: ${loginUrl}\nRole: Door Usher\nUsername: ${u}\nPassword: ${p}`;
+        navigator.clipboard?.writeText(text);
+        showToast('Usher login details copied to clipboard!', 'success');
+      });
+    }
   }
 
   const refreshActivityBtn = document.getElementById('refresh-usher-activity-btn');
@@ -153,7 +184,7 @@ async function handleCreate(e) {
     submitBtn.innerHTML = '<span class="spin-animation"><i class="bi bi-arrow-repeat"></i></span> Creating Account…';
   }
 
-  const usherEmail = `${cleanUsername}@usher.local`;
+  const usherEmail = `${cleanUsername}@usher.conference.com`;
   let success = false;
   let errorMsg = null;
 
@@ -263,6 +294,14 @@ async function handleCreate(e) {
 
   if (success) {
     showToast(`Door usher account "${cleanUsername}" created successfully!`, 'success');
+    const banner = document.getElementById('usher-created-banner');
+    const userEl = document.getElementById('created-usher-user');
+    const passEl = document.getElementById('created-usher-pass');
+    if (banner && userEl && passEl) {
+      userEl.textContent = cleanUsername;
+      passEl.textContent = password;
+      banner.style.display = 'block';
+    }
     e.target.reset();
     await loadUshers();
   } else {

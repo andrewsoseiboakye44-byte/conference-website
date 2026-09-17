@@ -26,7 +26,7 @@ async function processCreateUsher(body) {
   }
 
   const cleanUsername = username.replace(/[^a-z0-9_.-]/g, '');
-  const email = `${cleanUsername}@usher.local`;
+  const email = `${cleanUsername}@usher.conference.com`;
 
   // 1. If service role key is configured, use admin API
   if (SUPABASE_SERVICE_ROLE_KEY) {
