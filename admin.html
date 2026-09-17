@@ -905,8 +905,17 @@
         <div class="panel">
           <h2><i class="bi bi-person-plus-fill"></i> Add Door Usher Account</h2>
           <form id="add-usher-form" class="field-row">
-            <div class="field"><label for="usher-username-new">Usher Username</label><input id="usher-username-new" placeholder="e.g. usher_door1" /></div>
-            <div class="field"><label for="usher-password-new">Account Password</label><input type="password" id="usher-password-new" placeholder="Min 6 characters" /></div>
+            <div class="field">
+              <label for="usher-username-new">Usher Username *</label>
+              <input id="usher-username-new" placeholder="e.g. usher_door1" required autocomplete="username" />
+            </div>
+            <div class="field">
+              <label for="usher-password-new">Account Password *</label>
+              <div class="input-with-toggle">
+                <input type="password" id="usher-password-new" placeholder="Min 6 characters" required autocomplete="new-password" />
+                <button type="button" class="toggle-visibility" data-target="usher-password-new" title="Toggle visibility"><i class="bi bi-eye"></i></button>
+              </div>
+            </div>
             <div style="display: flex; align-items: flex-end; margin-bottom: 20px;">
               <button type="submit" class="btn btn--primary btn--block">
                 <i class="bi bi-person-check-fill"></i>
@@ -919,7 +928,7 @@
           <h2><i class="bi bi-people-fill"></i> Existing Ushers</h2>
           <div class="table-wrap">
             <table class="data-table" id="ushers-table">
-              <thead><tr><th>Username</th><th>Account Status</th><th>Created On</th><th>Manage</th></tr></thead>
+              <thead><tr><th>Username</th><th>Account Status</th><th>Created On</th><th>Manage Actions</th></tr></thead>
               <tbody id="ushers-tbody"></tbody>
             </table>
           </div>

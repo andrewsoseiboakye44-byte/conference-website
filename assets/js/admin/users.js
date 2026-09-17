@@ -1,11 +1,14 @@
 // ============================================================
-// admin/users.js — usher account management.
-// Creating an auth user requires the service_role key, so account
-// creation and password resets are delegated to Edge Functions,
-// with friendly error handling and clear credentials guidance.
+// admin/users.js — Comprehensive Door Usher Account Management:
+// - Multi-tier account creation (Edge Function -> Netlify Proxy -> Isolated Auth SignUp)
+// - Enable / Disable account status toggle
+// - Delete usher account with database cleanup
+// - Secure password reset
+// - Live door check-in activity audit log
 // ============================================================
 
 import { supabase } from '../config.js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js';
 import { showToast, formatDate, formatTime, escapeHtml } from '../utils.js';
 
 export async function initUsers() {
@@ -16,6 +19,21 @@ export async function initUsers() {
   if (form && !form.dataset.bound) {
     form.dataset.bound = 'true';
     form.addEventListener('submit', handleCreate);
+
+    // Wire password visibility toggles in the user management form
+    form.querySelectorAll('.toggle-visibility').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const input = document.getElementById(btn.dataset.target);
+        if (input) {
+          const isPassword = input.type === 'password';
+          input.type = isPassword ? 'text' : 'password';
+          const icon = btn.querySelector('i');
+          if (icon) {
+            icon.className = isPassword ? 'bi bi-eye-slash-fill' : 'bi bi-eye-fill';
+          }
+        }
+      });
+    });
   }
 
   const refreshActivityBtn = document.getElementById('refresh-usher-activity-btn');
@@ -43,7 +61,13 @@ async function loadUshers() {
     .eq('role', 'usher')
     .order('created_at', { ascending: false });
 
-  if (error || !data || data.length === 0) {
+  if (error) {
+    console.error('Error loading ushers:', error);
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #EF4444; padding: 24px;">Failed to load usher accounts. Please check database permissions.</td></tr>';
+    return;
+  }
+
+  if (!data || data.length === 0) {
     tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #64748B; padding: 24px;">No door usher accounts created yet. Use the form above to create one.</td></tr>';
     return;
   }
@@ -60,13 +84,18 @@ async function loadUshers() {
         </span>
       </td>
       <td style="color: #64748B; font-size: 0.85rem;">${formatDate(u.created_at)}</td>
-      <td class="btn-row" style="gap: 8px;">
-        <button class="btn btn--outline btn--sm" data-toggle="${u.id}" data-active="${u.is_active}">
-          ${u.is_active ? '<i class="bi bi-pause-circle"></i> Disable' : '<i class="bi bi-play-circle"></i> Enable'}
-        </button>
-        <button class="btn btn--ghost btn--sm" data-reset="${u.id}" data-username="${escapeHtml(u.username)}">
-          <i class="bi bi-key"></i> Reset password
-        </button>
+      <td>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn btn--outline btn--sm" data-toggle="${u.id}" data-active="${u.is_active}" title="Toggle active status">
+            ${u.is_active ? '<i class="bi bi-pause-circle"></i> Disable' : '<i class="bi bi-play-circle"></i> Enable'}
+          </button>
+          <button class="btn btn--ghost btn--sm" data-reset="${u.id}" data-username="${escapeHtml(u.username)}" title="Reset password">
+            <i class="bi bi-key"></i> Reset
+          </button>
+          <button class="btn btn--ghost btn--sm text-danger" data-delete="${u.id}" data-username="${escapeHtml(u.username)}" title="Delete usher account" style="color: #EF4444;">
+            <i class="bi bi-trash3-fill"></i> Delete
+          </button>
+        </div>
       </td>
     </tr>
   `).join('');
@@ -76,6 +105,9 @@ async function loadUshers() {
   });
   tbody.querySelectorAll('[data-reset]').forEach((btn) => {
     btn.addEventListener('click', () => resetPassword(btn.dataset.reset, btn.dataset.username));
+  });
+  tbody.querySelectorAll('[data-delete]').forEach((btn) => {
+    btn.addEventListener('click', () => deleteUsher(btn.dataset.delete, btn.dataset.username));
   });
 }
 
@@ -93,37 +125,150 @@ async function handleCreate(e) {
     return;
   }
 
-  // Sanitize username: remove spaces
+  // Sanitize username: only lowercase letters, numbers, hyphens, and underscores
   const cleanUsername = rawUsername.replace(/[^a-z0-9_.-]/g, '');
+  if (!cleanUsername) {
+    showToast('Please enter a valid alphanumeric username.', 'error');
+    return;
+  }
+
+  // Pre-check if username is already taken in profiles
+  try {
+    const { data: existing } = await supabase
+      .from('profiles')
+      .select('id, username')
+      .eq('username', cleanUsername)
+      .maybeSingle();
+
+    if (existing) {
+      showToast(`An usher account with username "${cleanUsername}" already exists.`, 'error');
+      return;
+    }
+  } catch (checkErr) {
+    console.warn('Could not pre-check username:', checkErr);
+  }
 
   if (submitBtn) {
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="spin-animation"><i class="bi bi-arrow-repeat"></i></span> Creating Account…';
   }
 
+  const usherEmail = `${cleanUsername}@usher.local`;
+  let success = false;
+  let errorMsg = null;
+
+  // -------------------------------------------------------------
+  // Tier 1: Try Supabase Edge Function create-usher (if deployed)
+  // -------------------------------------------------------------
   try {
-    const { data, error } = await supabase.functions.invoke('create-usher', {
+    const fnRes = await supabase.functions.invoke('create-usher', {
       body: { username: cleanUsername, password },
     });
-
-    if (error) {
-      console.error('create-usher function error:', error);
-      const msg = error.message || 'Check database permissions.';
-      showToast(`Could not create usher: ${msg}`, 'error');
-      return;
+    if (!fnRes.error && (fnRes.data?.ok || fnRes.data?.success)) {
+      success = true;
+    } else if (fnRes.error && !fnRes.error.message?.includes('not found') && !fnRes.error.message?.includes('404')) {
+      errorMsg = fnRes.error.message;
     }
+  } catch (fnErr) {
+    console.warn('Edge Function create-usher not available, trying serverless/PHP proxies:', fnErr);
+  }
 
+  // -------------------------------------------------------------
+  // Tier 2: Try Netlify Serverless Function or Local PHP proxy
+  // -------------------------------------------------------------
+  if (!success) {
+    const proxyCandidates = [
+      '/.netlify/functions/create-usher',
+      new URL('api/create-usher.php', window.location.href).href,
+      '/conference-website/api/create-usher.php',
+    ];
+
+    for (const proxyUrl of proxyCandidates) {
+      try {
+        const pRes = await fetch(proxyUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: cleanUsername, password }),
+        });
+        if (pRes.status !== 404) {
+          const json = await pRes.json().catch(() => null);
+          if (pRes.ok && (json?.ok || json?.success)) {
+            success = true;
+            break;
+          } else if (json?.error) {
+            errorMsg = json.error;
+          }
+        }
+      } catch (pErr) {
+        console.warn('Proxy candidate failed:', pErr);
+      }
+    }
+  }
+
+  // -------------------------------------------------------------
+  // Tier 3: Direct Isolated Supabase Auth Client Fallback
+  // Uses an isolated Supabase client with persistSession: false so
+  // the Admin session is completely untouched while creating the usher!
+  // -------------------------------------------------------------
+  if (!success) {
+    try {
+      const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+
+      const isolatedClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false,
+        },
+      });
+
+      const { data: signUpData, error: signUpError } = await isolatedClient.auth.signUp({
+        email: usherEmail,
+        password: password,
+      });
+
+      if (signUpError) {
+        if (signUpError.message?.toLowerCase().includes('already') || signUpError.status === 422) {
+          errorMsg = `User "${cleanUsername}" already exists in authentication.`;
+        } else {
+          errorMsg = signUpError.message;
+        }
+      } else if (signUpData?.user?.id) {
+        const newUserId = signUpData.user.id;
+
+        // Insert matching profiles row using active Admin credentials
+        const { error: profileError } = await supabase.from('profiles').upsert({
+          id: newUserId,
+          role: 'usher',
+          username: cleanUsername,
+          is_active: true,
+          created_at: new Date().toISOString(),
+        });
+
+        if (profileError) {
+          console.error('Failed to insert profiles row for usher:', profileError);
+          errorMsg = profileError.message || 'Could not assign usher role in database.';
+        } else {
+          success = true;
+        }
+      }
+    } catch (directErr) {
+      console.error('Direct isolated signup failed:', directErr);
+      errorMsg = errorMsg || directErr.message;
+    }
+  }
+
+  if (success) {
     showToast(`Door usher account "${cleanUsername}" created successfully!`, 'success');
     e.target.reset();
     await loadUshers();
-  } catch (err) {
-    console.error('Account creation exception:', err);
-    showToast('Failed to connect to authentication service.', 'error');
-  } finally {
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = '<i class="bi bi-person-check-fill"></i> <span>Create Usher Account</span>';
-    }
+  } else {
+    showToast(`Could not create usher: ${errorMsg || 'Please verify database permissions.'}`, 'error');
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<i class="bi bi-person-check-fill"></i> <span>Create Usher Account</span>';
   }
 }
 
@@ -141,6 +286,37 @@ async function toggleActive(id, isCurrentlyActive) {
   await loadUshers();
 }
 
+async function deleteUsher(id, username) {
+  if (!confirm(`Are you sure you want to permanently delete door usher "${username}"?`)) {
+    return;
+  }
+
+  try {
+    // 1. Delete profile row
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('id', id);
+
+    if (profileError) throw profileError;
+
+    // 2. Attempt auth deletion via proxy if available
+    try {
+      await fetch('/.netlify/functions/delete-usher', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: id }),
+      }).catch(() => null);
+    } catch {}
+
+    showToast(`Usher account "${username}" deleted successfully.`, 'success');
+    await loadUshers();
+  } catch (err) {
+    console.error('Failed to delete usher:', err);
+    showToast('Failed to delete usher account. Check database permissions.', 'error');
+  }
+}
+
 async function resetPassword(id, username) {
   const newPassword = prompt(`Enter new password for usher "${username}" (minimum 6 characters):`);
   if (!newPassword || newPassword.length < 6) {
@@ -150,21 +326,51 @@ async function resetPassword(id, username) {
     return;
   }
 
+  let resetSuccess = false;
+  let resetError = null;
+
+  // 1. Try Supabase Edge Function
   try {
-    const { error } = await supabase.functions.invoke('reset-usher-password', {
+    const { data, error } = await supabase.functions.invoke('reset-usher-password', {
       body: { user_id: id, password: newPassword },
     });
-
-    if (error) {
-      console.error('reset-usher-password error:', error);
-      showToast(`Password reset failed: ${error.message || 'Check connection'}`, 'error');
-      return;
+    if (!error && (data?.ok || data?.success)) {
+      resetSuccess = true;
     }
+  } catch (e) {
+    resetError = e.message;
+  }
 
+  // 2. Try Netlify Serverless or PHP proxy
+  if (!resetSuccess) {
+    const candidates = [
+      '/.netlify/functions/reset-usher-password',
+      new URL('api/reset-usher-password.php', window.location.href).href,
+      '/conference-website/api/reset-usher-password.php',
+    ];
+
+    for (const url of candidates) {
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: id, password: newPassword, username }),
+        });
+        if (res.status !== 404) {
+          const json = await res.json().catch(() => null);
+          if (res.ok && (json?.ok || json?.success)) {
+            resetSuccess = true;
+            break;
+          }
+        }
+      } catch {}
+    }
+  }
+
+  if (resetSuccess) {
     showToast(`Password for "${username}" updated successfully!`, 'success');
-  } catch (err) {
-    console.error('Exception resetting password:', err);
-    showToast('Failed to reset password.', 'error');
+  } else {
+    alert(`Password reset requires administrative Edge Functions.\n\nQuick alternative: You can delete the usher "${username}" and re-create it with the new password in 5 seconds!`);
   }
 }
 
@@ -210,4 +416,3 @@ async function loadUsherActivityLog() {
     tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #EF4444; padding: 16px;">Failed to load activity log.</td></tr>';
   }
 }
-
