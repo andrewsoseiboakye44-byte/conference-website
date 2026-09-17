@@ -153,9 +153,9 @@ function setupSmsTemplate() {
     saveDateBtn.dataset.bound = 'true';
     saveDateBtn.addEventListener('click', () => {
       const currentName = confSettings?.conference_name || 'GET-WISDOM Conference';
-      templateEl.value = `Save the Date! ${currentName} is coming up! Prepare to attend. All conference information is live on our website, and registration links will open soon. Visit: ${regUrl}`;
+      templateEl.value = `Save the Date! ${currentName} is coming up! Visit our website to explore our speakers, venue, and program schedule: ${regUrl} (Official registration opens soon!)`;
       updateCounter();
-      showToast('Loaded Save the Date announcement template', 'info');
+      showToast('Loaded Save the Date announcement with website link', 'info');
     });
   }
 }

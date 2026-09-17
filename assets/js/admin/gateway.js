@@ -136,7 +136,7 @@ async function loadSettings() {
         statusBadge.style.background = '#FEF3C7';
         statusBadge.style.color = '#92400E';
       }
-      updateProviderFields(document.getElementById('gw-provider')?.value || 'africastalking');
+      updateProviderFields(document.getElementById('gw-provider')?.value || 'mnotify');
       return;
     }
 

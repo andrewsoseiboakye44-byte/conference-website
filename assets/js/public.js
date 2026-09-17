@@ -287,6 +287,17 @@ function renderRegistrationAccess(data) {
       }
     }
 
+    // Update top nav & hero CTA buttons to guide visitors smoothly
+    const navCtaText = document.getElementById('nav-cta-text');
+    const navCtaIcon = document.getElementById('nav-cta-icon');
+    const heroCtaText = document.getElementById('hero-cta-text');
+    const heroCtaIcon = document.getElementById('hero-cta-icon');
+
+    if (navCtaText) navCtaText.textContent = 'Conference Info';
+    if (navCtaIcon) navCtaIcon.className = 'bi bi-info-circle-fill';
+    if (heroCtaText) heroCtaText.textContent = 'View Conference Details & Schedule';
+    if (heroCtaIcon) heroCtaIcon.className = 'bi bi-calendar-check-fill';
+
     // Lock the form inputs
     if (regCard) regCard.classList.add('reg-card--locked');
     if (form) {
@@ -317,6 +328,16 @@ function renderRegistrationAccess(data) {
         <i class="bi bi-arrow-right-circle-fill"></i>
       `;
     }
+
+    const navCtaText = document.getElementById('nav-cta-text');
+    const navCtaIcon = document.getElementById('nav-cta-icon');
+    const heroCtaText = document.getElementById('hero-cta-text');
+    const heroCtaIcon = document.getElementById('hero-cta-icon');
+
+    if (navCtaText) navCtaText.textContent = 'Register Now';
+    if (navCtaIcon) navCtaIcon.className = 'bi bi-ticket-perforated-fill';
+    if (heroCtaText) heroCtaText.textContent = 'Register to Attend';
+    if (heroCtaIcon) heroCtaIcon.className = 'bi bi-ticket-perforated-fill';
   }
 }
 

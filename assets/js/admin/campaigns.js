@@ -15,6 +15,14 @@ let recipientStats = {
   allSavedAndRegistered: 0,
 };
 
+function getPublicUrl() {
+  try {
+    return new URL('./index.html', window.location.href).href;
+  } catch {
+    return window.location.origin + '/index.html';
+  }
+}
+
 const CAMPAIGNS = [
   {
     type: 'auto_confirmation',
@@ -29,10 +37,10 @@ const CAMPAIGNS = [
     title: 'Pre-Registration / Save the Date',
     icon: 'bi-calendar2-heart-fill',
     trigger: 'Admin (Manual Broadcast)',
-    desc: 'Send an advance announcement that the conference is scheduled and registration links will be published soon. Ideal when registration has not yet opened.',
+    desc: 'Send an advance announcement with the website link so contacts can explore speakers, venue, and program schedule while registration is pending.',
     hasTextarea: true,
     defaultAudience: 'all_saved_and_registered',
-    defaultMessage: (s) => `Save the Date! ${s?.conference_name || 'GET-WISDOM Conference'} is coming up! Prepare to attend. All conference information is live on our website, and registration links will open soon. Stay tuned!`,
+    defaultMessage: (s, url) => `Save the Date! ${s?.conference_name || 'GET-WISDOM Conference'} is coming up! Visit our website to explore our speakers, venue, and program schedule: ${url || getPublicUrl()} (Official registration opens soon!)`,
   },
   {
     type: 'pre_event_reminder',
@@ -155,7 +163,7 @@ function renderCampaignCards() {
       `;
     }
 
-    const defaultMsg = c.defaultMessage ? c.defaultMessage(conferenceSettings) : '';
+    const defaultMsg = c.defaultMessage ? c.defaultMessage(conferenceSettings, getPublicUrl()) : '';
 
     return `
       <div class="campaign-card" id="card-${c.type}" style="display: flex; flex-direction: column; justify-content: space-between;">
@@ -254,7 +262,7 @@ function renderCampaignCards() {
     if (resetBtn) {
       resetBtn.addEventListener('click', () => {
         if (textarea && c.defaultMessage) {
-          textarea.value = c.defaultMessage(conferenceSettings);
+          textarea.value = c.defaultMessage(conferenceSettings, getPublicUrl());
           updateCounter();
           showToast('Template reset to default wording', 'info');
         }
