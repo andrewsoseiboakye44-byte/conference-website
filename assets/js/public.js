@@ -167,11 +167,15 @@ function applyConferenceSettings(data) {
   if (data.flyer_image_url) {
     if (flyerImg) {
       flyerImg.src = data.flyer_image_url;
-      flyerImg.alt = data.conference_name ? `${data.conference_name} Official Flyer` : 'Conference Official Flyer';
+      flyerImg.alt = '';
     }
     if (flyerWrap) {
       flyerWrap.style.display = 'block';
     }
+
+    // Ensure no stale badge or secondary buttons exist
+    document.querySelectorAll('.hero__flyer-badge').forEach((el) => el.remove());
+    document.querySelectorAll('#hero-info-btn').forEach((el) => el.remove());
 
     const heroEl = document.getElementById('hero');
     if (heroEl) {
@@ -325,6 +329,9 @@ function renderRegistrationAccess(data) {
     const heroCtaBtn = document.getElementById('hero-cta-btn');
     const heroCtaText = document.getElementById('hero-cta-text');
     const heroCtaIcon = document.getElementById('hero-cta-icon');
+
+    // Ensure no secondary info button exists in hero under location
+    document.querySelectorAll('#hero-info-btn').forEach((el) => el.remove());
 
     if (navCtaText) navCtaText.textContent = 'Register';
     if (navCtaIcon) navCtaIcon.className = 'bi bi-ticket-perforated-fill';
