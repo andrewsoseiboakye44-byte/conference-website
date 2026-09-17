@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "cleanUrls": true,
   "rewrites": [
     {
       "source": "/.netlify/functions/send-sms",
@@ -13,15 +13,6 @@
   "headers": [
     {
       "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "/assets/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
