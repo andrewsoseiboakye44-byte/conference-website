@@ -178,6 +178,7 @@ async function handleCreate(e) {
   // -------------------------------------------------------------
   if (!success) {
     const proxyCandidates = [
+      '/api/create-usher',
       '/.netlify/functions/create-usher',
       new URL('api/create-usher.php', window.location.href).href,
       '/conference-website/api/create-usher.php',

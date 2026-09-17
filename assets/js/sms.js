@@ -103,24 +103,27 @@ export function getLocalGatewayConfig() {
 async function callServerProxy(payload) {
   let lastError = null;
 
-  // 1. Try Netlify Functions endpoint (Production / Netlify CLI)
-  try {
-    const netlifyRes = await fetch('/.netlify/functions/send-sms', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (netlifyRes.status !== 404) {
-      const json = await netlifyRes.json().catch(() => null);
-      if (!netlifyRes.ok || (json && json.ok === false)) {
-        throw new Error(json?.error || `SMS gateway dispatch failed (HTTP ${netlifyRes.status})`);
+  // 1. Try Vercel / Netlify Functions endpoints
+  const serverlessCandidates = ['/api/send-sms', '/.netlify/functions/send-sms'];
+  for (const fnUrl of serverlessCandidates) {
+    try {
+      const fnRes = await fetch(fnUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (fnRes.status !== 404) {
+        const json = await fnRes.json().catch(() => null);
+        if (!fnRes.ok || (json && json.ok === false)) {
+          throw new Error(json?.error || `SMS gateway dispatch failed (HTTP ${fnRes.status})`);
+        }
+        return { ok: true, data: json };
       }
-      return { ok: true, data: json };
-    }
-  } catch (err) {
-    lastError = err;
-    if (err.message && !err.message.includes('404') && !err.message.includes('Failed to fetch')) {
-      throw err; // Real provider error returned by proxy
+    } catch (err) {
+      lastError = err;
+      if (err.message && !err.message.includes('404') && !err.message.includes('Failed to fetch')) {
+        throw err; // Real provider error returned by proxy
+      }
     }
   }
 
