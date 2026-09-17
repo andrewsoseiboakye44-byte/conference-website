@@ -533,12 +533,12 @@ button {
 }
 
 .app-footer__copy {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  display: block;
   margin: 0;
   font-weight: 500;
   color: inherit;
+  line-height: 1.55;
+  text-align: left;
 }
 
 .app-footer__developer {
@@ -643,6 +643,14 @@ button {
     text-align: center;
     justify-content: center;
     gap: 12px;
+  }
+  .app-footer__copy {
+    text-align: center;
+    line-height: 1.6;
+    font-size: 0.84rem;
+    max-width: 340px;
+    margin: 0 auto;
+    word-break: normal;
   }
   .app-footer__developer {
     display: flex;
