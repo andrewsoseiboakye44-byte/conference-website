@@ -64,7 +64,8 @@ async function init() {
 
     const profile = await Promise.race([authPromise, timeoutPromise]);
     if (!profile) {
-      // requireRole redirects unauthenticated sessions to login.html
+      updatePreloaderStatus('Redirecting to login portal…');
+      setTimeout(hidePreloader, 2000);
       return;
     }
 

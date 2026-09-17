@@ -25,6 +25,23 @@
     </div>
   </div>
 
+  <!-- Inline fail-safe preloader watchdog -->
+  <script>
+    setTimeout(function() {
+      var loader = document.getElementById('admin-app-loader');
+      if (loader && loader.style.display !== 'none' && !loader.classList.contains('admin-app-loader--hidden')) {
+        var statusEl = document.getElementById('admin-app-loader-status');
+        if (statusEl && !document.getElementById('loader-watchdog-actions')) {
+          statusEl.innerHTML = '<span style="color: #FBBF24; display:block; margin-bottom:8px;">Authentication is taking longer than expected.</span>' +
+            '<div id="loader-watchdog-actions" style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:8px;">' +
+              '<a href="./login.html" style="background:#2563EB; color:#FFF; padding:6px 14px; border-radius:8px; font-size:0.82rem; font-weight:700; text-decoration:none;">Go to Login</a>' +
+              '<button type="button" onclick="document.getElementById(\'admin-app-loader\').style.display=\'none\';" style="background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.25); color:#FFF; padding:6px 14px; border-radius:8px; font-size:0.82rem; cursor:pointer;">Dismiss &amp; View Console</button>' +
+            '</div>';
+        }
+      }
+    }, 5000);
+  </script>
+
   <div class="admin-shell">
 
     <!-- ============ Sidebar Backdrop (Mobile) ============ -->
