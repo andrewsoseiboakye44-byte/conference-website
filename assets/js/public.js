@@ -728,10 +728,24 @@ async function loadSpeakers() {
 
   grid.innerHTML = data.map((speaker) => `
     <article class="speaker-card">
-      <img class="speaker-card__photo" src="${escapeHtml(speaker.photo_url || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&auto=format&fit=crop&q=80')}" alt="${escapeHtml(speaker.name)}" loading="lazy" />
-      <h3 class="speaker-card__name">${escapeHtml(speaker.name)}</h3>
-      <p class="speaker-card__title">${escapeHtml(speaker.title ?? '')}</p>
-      <p class="speaker-card__bio">${escapeHtml(speaker.bio ?? '')}</p>
+      <div class="speaker-card__media">
+        <img
+          class="speaker-card__photo"
+          src="${escapeHtml(speaker.photo_url || './assets/images/default-avatar.svg')}"
+          alt="${escapeHtml(speaker.name)}"
+          loading="lazy"
+          onerror="this.onerror=null; this.src='./assets/images/default-avatar.svg';"
+        />
+        <span class="speaker-card__pill">
+          <i class="bi bi-mic-fill"></i>
+          <span>${escapeHtml(speaker.title ? 'Speaker' : 'Guest')}</span>
+        </span>
+      </div>
+      <div class="speaker-card__body">
+        <h3 class="speaker-card__name">${escapeHtml(speaker.name)}</h3>
+        ${speaker.title ? `<span class="speaker-card__role-tag"><i class="bi bi-patch-check-fill" style="font-size: 0.85rem;"></i>${escapeHtml(speaker.title)}</span>` : ''}
+        ${speaker.bio ? `<p class="speaker-card__bio">${escapeHtml(speaker.bio)}</p>` : ''}
+      </div>
     </article>
   `).join('');
 }
