@@ -9,17 +9,35 @@
   <link rel="stylesheet" href="./assets/css/admin.css" />
 </head>
 <body class="admin-body">
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- ============ Modern App Preloader ============ -->
+  <div id="admin-app-loader" class="admin-app-loader" role="status" aria-live="polite">
+    <div class="admin-app-loader__content">
+      <div class="admin-app-loader__brand">
+        <div class="admin-app-loader__icon-box">
+          <i class="bi bi-shield-shaded"></i>
+        </div>
+        <div class="admin-app-loader__title">Conference Admin</div>
+      </div>
+      <div class="admin-app-loader__spinner"></div>
+      <div class="admin-app-loader__status" id="admin-app-loader-status">Securing administrative session…</div>
+    </div>
+  </div>
 
   <div class="admin-shell">
 
+    <!-- ============ Sidebar Backdrop (Mobile) ============ -->
+    <div class="admin-sidebar-backdrop" id="sidebar-backdrop" aria-hidden="true"></div>
+
     <!-- ============ Sidebar ============ -->
-    <aside class="admin-sidebar">
+    <aside class="admin-sidebar" id="admin-sidebar" role="navigation" aria-label="Admin Navigation">
       <div class="admin-sidebar__brand">
         <i class="bi bi-shield-shaded"></i>
         <span>Conference Admin</span>
       </div>
       <nav class="admin-nav">
-        <button class="admin-nav__item admin-nav__item--active" data-view="dashboard">
+        <button class="admin-nav__item admin-nav__item--active" data-view="dashboard" aria-current="page">
           <i class="bi bi-speedometer2"></i>
           <span>Dashboard</span>
         </button>
@@ -65,18 +83,39 @@
     <!-- ============ Mobile Top App Bar ============ -->
     <div class="admin-mobilebar">
       <div class="d-flex align-items-center gap-2">
-        <button id="mobile-menu-btn" aria-label="Open menu">
+        <button id="mobile-menu-btn" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="admin-sidebar">
           <i class="bi bi-list"></i>
         </button>
         <span id="mobile-title" style="font-weight: 700;">Dashboard</span>
       </div>
-      <a href="./index.html" target="_blank" class="btn btn--outline btn--sm" style="color: #FFFFFF; border-color: rgba(255,255,255,0.2);">
+      <a href="./index.html" target="_blank" rel="noopener" class="btn btn--outline btn--sm" style="color: #FFFFFF; border-color: rgba(255,255,255,0.2);" title="Open Public Registration Site">
         <i class="bi bi-box-arrow-up-right"></i>
       </a>
     </div>
 
     <!-- ============ Main Content ============ -->
-    <main class="admin-main">
+    <main class="admin-main" id="main-content" role="main">
+
+      <!-- Desktop Executive Top Bar -->
+      <header class="admin-header-bar" aria-label="Console Overview">
+        <div class="admin-header-bar__left">
+          <div class="admin-header-bar__badge">
+            <span class="pulse-dot"></span>
+            <span id="system-status-text">System Online</span>
+          </div>
+          <div class="admin-header-bar__greeting">
+            <span>Welcome back, </span>
+            <strong id="admin-user-display">Administrator</strong>
+          </div>
+        </div>
+        <div class="admin-header-bar__right">
+          <span class="admin-header-bar__date" id="admin-header-date"></span>
+          <a href="./index.html" target="_blank" rel="noopener" class="btn btn--outline btn--sm admin-header-bar__link" title="Open Public Registration Site in New Tab">
+            <i class="bi bi-box-arrow-up-right"></i>
+            <span>View Public Site</span>
+          </a>
+        </div>
+      </header>
 
       <!-- DASHBOARD VIEW -->
       <section class="admin-view admin-view--active" id="view-dashboard">
@@ -453,7 +492,7 @@
               <i class="bi bi-filetype-csv text-primary"></i>
               <span>Export CSV</span>
             </button>
-            <button class="btn btn--outline btn--sm" id="export-contacts-excel-btn" type="button" title="Export contacts as Excel .xlsx">
+            <button class="btn btn--outline btn--sm" id="export-invite-excel-btn" type="button" title="Export contacts as Excel .xlsx">
               <i class="bi bi-file-earmark-excel-fill" style="color: #10B981;"></i>
               <span>Export Excel (.xlsx)</span>
             </button>

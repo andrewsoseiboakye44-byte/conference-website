@@ -209,6 +209,7 @@ function bindEvents() {
 
   // Export Contacts (CSV & Excel .xlsx)
   document.getElementById('export-contacts-csv-btn')?.addEventListener('click', exportContactsCsv);
+  document.getElementById('export-invite-excel-btn')?.addEventListener('click', exportContactsExcel);
   document.getElementById('export-contacts-excel-btn')?.addEventListener('click', exportContactsExcel);
   document.getElementById('export-contacts-btn')?.addEventListener('click', exportContactsCsv);
 
