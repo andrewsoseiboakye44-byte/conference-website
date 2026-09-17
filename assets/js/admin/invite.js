@@ -19,6 +19,7 @@ let confSettings = null;
 let regUrl = '';
 let isSendingBulk = false;
 let isAddingSingle = false;
+let eventsBound = false;
 
 export async function initInvite() {
   regUrl = new URL('./index.html', window.location.href).href;
@@ -49,6 +50,17 @@ export async function initInvite() {
   // Wire UI Event Listeners
   bindEvents();
 }
+
+/**
+ * Initializes the standalone Invited Contacts Directory view
+ */
+export async function initContactsDirectory() {
+  await loadContactsDirectory();
+  await loadBatches();
+  bindEvents();
+}
+
+export { loadContactsDirectory, loadBatches };
 
 /**
  * Renders QR codes on both the admin panel canvas and the printable poster canvas
@@ -126,6 +138,9 @@ function setupSmsTemplate() {
 }
 
 function bindEvents() {
+  if (eventsBound) return;
+  eventsBound = true;
+
   // Copy registration link
   document.getElementById('copy-reg-url-btn')?.addEventListener('click', async () => {
     try {
@@ -219,6 +234,18 @@ function bindEvents() {
   document.getElementById('goto-gateway-btn')?.addEventListener('click', () => {
     const gwNav = document.querySelector('.admin-nav__item[data-view="gateway"]');
     if (gwNav) gwNav.click();
+  });
+
+  // Quick jump to Contacts Directory from Invite view
+  document.getElementById('goto-contacts-directory-btn')?.addEventListener('click', () => {
+    const navItem = document.querySelector('.admin-nav__item[data-view="contacts"]');
+    if (navItem) navItem.click();
+  });
+
+  // Quick jump to Invite view from Contacts Directory
+  document.getElementById('goto-invite-btn')?.addEventListener('click', () => {
+    const navItem = document.querySelector('.admin-nav__item[data-view="invite"]');
+    if (navItem) navItem.click();
   });
 }
 

@@ -39,6 +39,10 @@
           <i class="bi bi-envelope-paper-heart-fill"></i>
           <span>Invite Contacts</span>
         </button>
+        <button class="admin-nav__item" data-view="contacts">
+          <i class="bi bi-journal-bookmark-fill"></i>
+          <span>Invited Contacts</span>
+        </button>
         <button class="admin-nav__item" data-view="campaigns">
           <i class="bi bi-chat-left-dots-fill"></i>
           <span>SMS Campaigns</span>
@@ -610,14 +614,42 @@
           </div>
         </div>
 
+        <!-- Directory Link Panel inside Invite View -->
+        <div class="panel" style="background: #F8FAFC; border: 1px dashed #CBD5E1; text-align: center; padding: 24px; margin-bottom: 24px;">
+          <div style="max-width: 520px; margin: 0 auto;">
+            <i class="bi bi-journal-bookmark-fill text-primary" style="font-size: 2rem; display: block; margin-bottom: 8px;"></i>
+            <h3 style="margin: 0 0 6px; font-size: 1.05rem; color: #0F172A;">Manage All Invited Contacts &amp; Batches</h3>
+            <p class="hint" style="margin: 0 0 14px; font-size: 0.88rem;">
+              Search contacts, filter by delivery and registration status, track conversion rates, and export to CSV or Excel.
+            </p>
+            <button type="button" class="btn btn--outline" id="goto-contacts-directory-btn">
+              <i class="bi bi-arrow-right-circle"></i> Open Invited Contacts Directory
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- INVITED CONTACTS DIRECTORY VIEW -->
+      <section class="admin-view" id="view-contacts">
+        <div class="admin-view-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h1>Invited Contacts Directory</h1>
+            <p class="hint" style="margin: 4px 0 0; font-size: 0.88rem;">Complete directory of all single and bulk uploaded contacts with real-time conversion tracking.</p>
+          </div>
+          <button type="button" class="btn btn--primary btn--sm" id="goto-invite-btn">
+            <i class="bi bi-person-plus-fill"></i> Add / Invite New Contacts
+          </button>
+        </div>
+
         <!-- All Invited Contacts Directory Table -->
         <div class="panel" style="margin-bottom: 24px;">
           <div class="panel-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
             <div>
               <h2 style="margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
-                <i class="bi bi-journal-bookmark-fill text-primary"></i> Invited Contacts Directory
+                <i class="bi bi-journal-bookmark-fill text-primary"></i> Directory Records
               </h2>
-              <p class="hint" style="margin: 2px 0 0; font-size: 0.85rem;">All individual and bulk uploaded contacts with real-time registration conversion tracking.</p>
+              <p class="hint" style="margin: 2px 0 0; font-size: 0.85rem;">Browse, filter, search, and export invited contacts.</p>
             </div>
             <div class="d-flex gap-2">
               <button class="btn btn--outline btn--sm" id="refresh-contacts-btn" type="button">

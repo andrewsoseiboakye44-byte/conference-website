@@ -10,7 +10,7 @@ import { initDashboard } from './dashboard.js';
 import { initConferenceInfo } from './conference-info.js';
 import { initSpeakers } from './speakers.js';
 import { initRegistrants } from './registrants.js';
-import { initInvite } from './invite.js';
+import { initInvite, initContactsDirectory, loadContactsDirectory, loadBatches } from './invite.js';
 import { initCampaigns } from './campaigns.js';
 import { initGateway } from './gateway.js';
 import { initUsers } from './users.js';
@@ -21,6 +21,7 @@ const moduleInitializers = {
   speakers: initSpeakers,
   registrants: initRegistrants,
   invite: initInvite,
+  contacts: initContactsDirectory,
   campaigns: initCampaigns,
   gateway: initGateway,
   users: initUsers,
@@ -32,6 +33,7 @@ const titles = {
   speakers: 'Speakers',
   registrants: 'Registrants',
   invite: 'Invite Contacts',
+  contacts: 'Invited Contacts',
   campaigns: 'SMS Campaigns',
   gateway: 'SMS Gateway',
   users: 'Manage Users',
@@ -123,6 +125,9 @@ async function switchView(view) {
 
   if (view === 'dashboard' && initialized.has('dashboard')) {
     moduleInitializers.dashboard?.();
+  } else if (view === 'contacts' && initialized.has('contacts')) {
+    loadContactsDirectory?.();
+    loadBatches?.();
   } else {
     await ensureInitialized(view);
   }
