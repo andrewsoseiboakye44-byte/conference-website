@@ -180,30 +180,45 @@ async function directBrowserDispatch({ phone, message, gateway }) {
   }
 
   if (provider === 'mnotify') {
-    // 1. Try v2 quick API
+    const mnotifyPhone = (phone.startsWith('233') && phone.length === 12)
+      ? '0' + phone.slice(3)
+      : phone;
+
+    // 1. Try v2 quick API with ?key= query parameter
     try {
-      const res = await fetch('https://api.mnotify.com/api/sms/quick', {
+      const v2Url = `https://api.mnotify.com/api/sms/quick?key=${encodeURIComponent(apiKey)}`;
+      const res = await fetch(v2Url, {
         method: 'POST',
-        headers: { 'key': apiKey, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          recipient: [phone],
+          recipient: [mnotifyPhone],
           sender: senderId,
-          message,
+          message: message,
           is_schedule: false,
         }),
       });
       const data = await res.json().catch(() => null);
-      if (res.ok && data && data.status !== 'error') return { ok: true, data };
-    } catch {}
+      if (res.ok && data && (data.status === 'success' || data.code === '1000' || data.code === 1000)) {
+        return { ok: true, data };
+      }
+      if (data && (data.error || data.message)) {
+        const errorText = data.error || data.message;
+        if (!errorText.toLowerCase().includes('server') && !errorText.toLowerCase().includes('fail')) {
+          throw new Error(errorText);
+        }
+      }
+    } catch (e) {
+      if (e.message && !e.message.toLowerCase().includes('fetch')) throw e;
+    }
 
-    // 2. Try v1 Query API
-    const v1Url = `https://apps.mnotify.net/smsapi?key=${encodeURIComponent(apiKey)}&to=${encodeURIComponent(phone)}&msg=${encodeURIComponent(message)}&sender_id=${encodeURIComponent(senderId)}`;
+    // 2. Fallback: Try v1 Query API
+    const v1Url = `https://apps.mnotify.net/smsapi?key=${encodeURIComponent(apiKey)}&to=${encodeURIComponent(mnotifyPhone)}&msg=${encodeURIComponent(message)}&sender_id=${encodeURIComponent(senderId)}`;
     const v1Res = await fetch(v1Url);
     const v1Data = await v1Res.json().catch(() => null);
-    if (v1Res.ok && v1Data && (!v1Data.status || v1Data.status !== 'error')) {
+    if (v1Res.ok && v1Data && (!v1Data.status || v1Data.status === 'success' || v1Data.code === '1000' || v1Data.code === 1000)) {
       return { ok: true, data: v1Data };
     }
-    throw new Error(v1Data?.message || 'mNotify dispatch failed');
+    throw new Error(v1Data?.message || v1Data?.error || 'mNotify dispatch failed');
   }
 
   throw new Error('Direct browser dispatch not available for this provider.');
@@ -211,8 +226,9 @@ async function directBrowserDispatch({ phone, message, gateway }) {
 
 /**
  * Universal SMS Dispatcher.
- * Dispatches via server-side proxies to prevent CORS blocks and ensure
- * instant delivery. Logs results to Supabase sms_logs table.
+ * Dispatches via direct browser API (for CORS-enabled providers) or
+ * server-side proxies to prevent CORS blocks and ensure instant delivery.
+ * Logs results to Supabase sms_logs table.
  */
 export async function dispatchDirectSms({
   phone,
@@ -230,28 +246,49 @@ export async function dispatchDirectSms({
   }
 
   const normalizedPhone = formatPhoneNumber(phone);
+  const provider = (gw.provider || '').toLowerCase();
   let status = 'sent';
   let errorMessage = null;
 
-  try {
-    await callServerProxy({
-      action,
-      phone: normalizedPhone,
-      message,
-      gateway: gw,
-      campaign_type: campaignType,
-    });
-  } catch (proxyErr) {
-    // Secondary fallback: Direct browser dispatch
+  // For CORS-enabled providers like mNotify and Arkesel, direct browser fetch is fastest & most reliable
+  if (provider === 'mnotify' || provider === 'arkesel') {
     try {
       await directBrowserDispatch({
         phone: normalizedPhone,
         message,
         gateway: gw,
       });
+      status = 'sent';
     } catch (directErr) {
+      // Fallback to server proxy if direct browser call fails
+      try {
+        await callServerProxy({
+          action,
+          phone: normalizedPhone,
+          message,
+          gateway: gw,
+          campaign_type: campaignType,
+        });
+        status = 'sent';
+      } catch (proxyErr) {
+        status = 'failed';
+        errorMessage = directErr.message || proxyErr.message || 'SMS dispatch failed';
+      }
+    }
+  } else {
+    // For other providers (Twilio, Hubtel, Africa's Talking), execute through server proxy
+    try {
+      await callServerProxy({
+        action,
+        phone: normalizedPhone,
+        message,
+        gateway: gw,
+        campaign_type: campaignType,
+      });
+      status = 'sent';
+    } catch (proxyErr) {
       status = 'failed';
-      errorMessage = directErr.message || proxyErr.message || String(proxyErr);
+      errorMessage = proxyErr.message || 'SMS dispatch failed';
     }
   }
 

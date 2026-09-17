@@ -201,39 +201,51 @@ async function dispatchToProvider({ phone, message, gateway }) {
   }
 
   if (provider === 'mnotify') {
-    // mNotify SMS API (Ghana: v2 quick)
-    const res = await fetch('https://api.mnotify.com/api/sms/quick', {
-      method: 'POST',
-      headers: {
-        'key': apiKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        recipient: [normalizedPhone],
-        sender: senderId,
-        message: message,
-        is_schedule: false,
-      }),
-    });
+    // mNotify expects phone format like 024XXXXXXX or 233XXXXXXXXX
+    const mnotifyPhone = (normalizedPhone.startsWith('233') && normalizedPhone.length === 12)
+      ? '0' + normalizedPhone.slice(3)
+      : normalizedPhone;
 
-    const json = await res.json().catch(() => null);
-    if (res.ok && json && json.status !== 'error') {
-      return { ok: true, data: json };
+    // 1. Try mNotify v2 Quick API (Key passed via ?key= query param)
+    try {
+      const v2Url = `https://api.mnotify.com/api/sms/quick?key=${encodeURIComponent(apiKey)}`;
+      const res = await fetch(v2Url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipient: [mnotifyPhone],
+          sender: senderId,
+          message: message,
+          is_schedule: false,
+        }),
+      });
+
+      const json = await res.json().catch(() => null);
+      if (res.ok && json && (json.status === 'success' || json.code === '1000' || json.code === 1000)) {
+        return { ok: true, data: json };
+      }
+      if (json && (json.error || json.message)) {
+        const errorText = json.error || json.message;
+        if (!errorText.toLowerCase().includes('server') && !errorText.toLowerCase().includes('fail')) {
+          // Fallback to v1 before giving up
+        }
+      }
+    } catch (v2Err) {
+      console.warn('mNotify v2 quick endpoint error, trying v1:', v2Err);
     }
 
-    // Fallback: Try mNotify v1 API
+    // 2. Fallback: Try mNotify v1 API
     try {
-      const v1Url = `https://apps.mnotify.net/smsapi?key=${encodeURIComponent(apiKey)}&to=${encodeURIComponent(normalizedPhone)}&msg=${encodeURIComponent(message)}&sender_id=${encodeURIComponent(senderId)}`;
+      const v1Url = `https://apps.mnotify.net/smsapi?key=${encodeURIComponent(apiKey)}&to=${encodeURIComponent(mnotifyPhone)}&msg=${encodeURIComponent(message)}&sender_id=${encodeURIComponent(senderId)}`;
       const v1Res = await fetch(v1Url);
       const v1Json = await v1Res.json().catch(() => null);
-      if (v1Res.ok && v1Json && (!v1Json.status || v1Json.status !== 'error')) {
+      if (v1Res.ok && v1Json && (!v1Json.status || v1Json.status === 'success' || v1Json.code === '1000' || v1Json.code === 1000)) {
         return { ok: true, data: v1Json };
       }
-      const errMsg = v1Json?.message || json?.message || `mNotify send failed with status ${res.status}`;
-      return { ok: false, error: errMsg, details: v1Json || json };
+      const errMsg = v1Json?.message || v1Json?.error || `mNotify send failed (${v1Res.status})`;
+      return { ok: false, error: errMsg, details: v1Json };
     } catch {
-      const errMsg = json?.message || `mNotify send failed with status ${res.status}`;
-      return { ok: false, error: errMsg, details: json };
+      return { ok: false, error: 'mNotify dispatch failed across both v2 and v1 endpoints.' };
     }
   }
 

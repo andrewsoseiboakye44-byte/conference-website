@@ -129,10 +129,12 @@ if ($provider === 'arkesel') {
         }
     }
 } elseif ($provider === 'mnotify') {
-    // 1. Try v2 quick API
-    $url = 'https://api.mnotify.com/api/sms/quick';
+    $mnotifyPhone = (strpos($normPhone, '233') === 0 && strlen($normPhone) === 12) ? '0' . substr($normPhone, 3) : $normPhone;
+
+    // 1. Try v2 quick API with ?key= query param
+    $url = 'https://api.mnotify.com/api/sms/quick?key=' . urlencode($apiKey);
     $payload = json_encode([
-        'recipient' => [$normPhone],
+        'recipient' => [$mnotifyPhone],
         'sender' => $senderId,
         'message' => $message,
         'is_schedule' => false
@@ -142,22 +144,19 @@ if ($provider === 'arkesel') {
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'key: ' . $apiKey,
-        'Content-Type: application/json'
-    ]);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
     $json = json_decode($response, true);
-    if ($httpCode >= 200 && $httpCode < 300 && isset($json['status']) && $json['status'] !== 'error') {
+    if ($httpCode >= 200 && $httpCode < 300 && isset($json['status']) && ($json['status'] === 'success' || (isset($json['code']) && (string)$json['code'] === '1000'))) {
         $ok = true;
         $responseData = $json;
     } else {
         // 2. Fallback: Try mNotify v1 API
-        $v1Url = "https://apps.mnotify.net/smsapi?key=" . urlencode($apiKey) . "&to=" . urlencode($normPhone) . "&msg=" . urlencode($message) . "&sender_id=" . urlencode($senderId);
+        $v1Url = "https://apps.mnotify.net/smsapi?key=" . urlencode($apiKey) . "&to=" . urlencode($mnotifyPhone) . "&msg=" . urlencode($message) . "&sender_id=" . urlencode($senderId);
         $ch2 = curl_init($v1Url);
         curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch2, CURLOPT_SSL_VERIFYPEER, false);
@@ -166,11 +165,11 @@ if ($provider === 'arkesel') {
         curl_close($ch2);
 
         $v1Json = json_decode($v1Res, true);
-        if ($v1Code >= 200 && $v1Code < 300 && (!isset($v1Json['status']) || $v1Json['status'] !== 'error')) {
+        if ($v1Code >= 200 && $v1Code < 300 && (!isset($v1Json['status']) || $v1Json['status'] === 'success' || (isset($v1Json['code']) && (string)$v1Json['code'] === '1000'))) {
             $ok = true;
             $responseData = $v1Json ?: $v1Res;
         } else {
-            $error = $json['message'] ?? $v1Json['message'] ?? $v1Res ?? $response ?? "mNotify error (HTTP $httpCode)";
+            $error = $json['error'] ?? $json['message'] ?? $v1Json['message'] ?? $v1Json['error'] ?? $v1Res ?? $response ?? "mNotify error (HTTP $httpCode)";
         }
     }
 } elseif ($provider === 'hubtel') {
