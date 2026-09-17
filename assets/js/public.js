@@ -326,13 +326,13 @@ function renderRegistrationAccess(data) {
     const heroCtaText = document.getElementById('hero-cta-text');
     const heroCtaIcon = document.getElementById('hero-cta-icon');
 
-    if (navCtaText) navCtaText.textContent = 'Conference Information';
-    if (navCtaIcon) navCtaIcon.className = 'bi bi-info-circle-fill';
-    if (navCtaBtn) navCtaBtn.setAttribute('href', '#about');
+    if (navCtaText) navCtaText.textContent = 'Register';
+    if (navCtaIcon) navCtaIcon.className = 'bi bi-ticket-perforated-fill';
+    if (navCtaBtn) navCtaBtn.setAttribute('href', '#register');
 
-    if (heroCtaText) heroCtaText.textContent = 'Conference Information';
-    if (heroCtaIcon) heroCtaIcon.className = 'bi bi-info-circle-fill';
-    if (heroCtaBtn) heroCtaBtn.setAttribute('href', '#about');
+    if (heroCtaText) heroCtaText.textContent = lockReason === 'ended' ? 'Registration Closed' : 'Registration Opens Soon';
+    if (heroCtaIcon) heroCtaIcon.className = 'bi bi-lock-fill';
+    if (heroCtaBtn) heroCtaBtn.setAttribute('href', '#register');
 
     // Lock the form inputs
     if (regCard) regCard.classList.add('reg-card--locked');

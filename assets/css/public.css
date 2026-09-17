@@ -50,17 +50,7 @@
   gap: 10px;
 }
 
-.nav-info-short {
-  display: none;
-}
-
 @media (max-width: 580px) {
-  .nav-info-full {
-    display: none;
-  }
-  .nav-info-short {
-    display: inline;
-  }
   .site-nav__brand span:not(.site-nav__brand-icon) {
     font-size: 0.95rem;
   }
