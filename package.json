@@ -1,5 +1,5 @@
 {
-  "name": "conference-website",
+  "name": "get-wisdom-conference",
   "version": "1.0.0",
   "private": true,
   "description": "Church conference management system — public registration, admin dashboard, usher check-in, powered by Supabase.",
