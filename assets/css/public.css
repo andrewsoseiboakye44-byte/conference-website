@@ -251,6 +251,139 @@
   margin: 0 auto;
 }
 
+/* ============================================================
+   REGISTRATION AVAILABILITY & TIMELINE BANNER
+   ============================================================ */
+.reg-status-banner {
+  background: linear-gradient(145deg, #0F172A 0%, #1E293B 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 24px 24px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12), 0 2px 6px rgba(15, 23, 42, 0.06);
+  color: #FFFFFF;
+  text-align: left;
+  animation: fadeInDown 0.3s ease-out;
+}
+
+.reg-status-banner__icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  background: rgba(37, 99, 235, 0.2);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  color: #60A5FA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.reg-status-banner__content {
+  flex: 1;
+}
+
+.reg-status-banner__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #FCD34D;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+
+.reg-status-banner__badge.badge--closed {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #FCA5A5;
+}
+
+.reg-status-banner__badge.badge--ended {
+  background: rgba(148, 163, 184, 0.2);
+  border-color: rgba(148, 163, 184, 0.35);
+  color: #CBD5E1;
+}
+
+.reg-status-banner__title {
+  font-size: 1.28rem;
+  font-weight: 800;
+  color: #F8FAFC;
+  margin: 0 0 6px;
+  line-height: 1.3;
+}
+
+.reg-status-banner__message {
+  font-size: 0.92rem;
+  color: #CBD5E1;
+  margin: 0 0 10px;
+  line-height: 1.55;
+}
+
+.reg-status-banner__dates {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #93C5FD;
+}
+
+/* Locked Registration Card States */
+.reg-card.reg-card--locked {
+  background: #F8FAFC;
+  border-color: #E2E8F0;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+}
+
+.reg-card.reg-card--locked .field input,
+.reg-card.reg-card--locked .field select,
+.reg-card.reg-card--locked .welcome-gift-card {
+  opacity: 0.65;
+  cursor: not-allowed;
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+}
+
+.reg-card.reg-card--locked .reg-badge-pill {
+  background: #FEF3C7;
+  border-color: #FDE68A;
+  color: #B45309;
+}
+
+.reg-card.reg-card--locked .btn-submit-reg {
+  background: #94A3B8 !important;
+  border-color: #94A3B8 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Interactive Category Cards Selector */
 .reg-category-grid {
   display: grid;

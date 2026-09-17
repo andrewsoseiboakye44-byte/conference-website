@@ -135,6 +135,29 @@ function setupSmsTemplate() {
 
   templateEl.addEventListener('input', updateCounter);
   updateCounter();
+
+  const standardBtn = document.getElementById('preset-tpl-standard');
+  const saveDateBtn = document.getElementById('preset-tpl-save-date');
+
+  if (standardBtn && !standardBtn.dataset.bound) {
+    standardBtn.dataset.bound = 'true';
+    standardBtn.addEventListener('click', () => {
+      const currentName = confSettings?.conference_name || 'Annual Conference';
+      templateEl.value = `You are warmly invited to ${currentName}! Click here to register your attendance for free: ${regUrl}`;
+      updateCounter();
+      showToast('Loaded standard invitation template', 'info');
+    });
+  }
+
+  if (saveDateBtn && !saveDateBtn.dataset.bound) {
+    saveDateBtn.dataset.bound = 'true';
+    saveDateBtn.addEventListener('click', () => {
+      const currentName = confSettings?.conference_name || 'GET-WISDOM Conference';
+      templateEl.value = `Save the Date! ${currentName} is coming up! Prepare to attend. All conference information is live on our website, and registration links will open soon. Visit: ${regUrl}`;
+      updateCounter();
+      showToast('Loaded Save the Date announcement template', 'info');
+    });
+  }
 }
 
 function bindEvents() {

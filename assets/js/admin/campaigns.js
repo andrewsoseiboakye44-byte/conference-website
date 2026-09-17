@@ -25,6 +25,16 @@ const CAMPAIGNS = [
     auto: true,
   },
   {
+    type: 'save_the_date_alert',
+    title: 'Pre-Registration / Save the Date',
+    icon: 'bi-calendar2-heart-fill',
+    trigger: 'Admin (Manual Broadcast)',
+    desc: 'Send an advance announcement that the conference is scheduled and registration links will be published soon. Ideal when registration has not yet opened.',
+    hasTextarea: true,
+    defaultAudience: 'all_saved_and_registered',
+    defaultMessage: (s) => `Save the Date! ${s?.conference_name || 'GET-WISDOM Conference'} is coming up! Prepare to attend. All conference information is live on our website, and registration links will open soon. Stay tuned!`,
+  },
+  {
     type: 'pre_event_reminder',
     title: 'Pre-Event Reminder',
     icon: 'bi-bell-fill',
@@ -168,10 +178,10 @@ function renderCampaignCards() {
               <i class="bi bi-people-fill text-primary"></i> Target Audience
             </label>
             <select id="aud-${c.type}" style="width: 100%; font-size: 0.85rem; padding: 7px 10px; border-radius: 8px; border: 1.5px solid #CBD5E1; background: #FFFFFF;">
-              <option value="registrants" selected>
+              <option value="registrants" ${c.defaultAudience === 'registrants' || !c.defaultAudience ? 'selected' : ''}>
                 Registered Attendees Only (${recipientStats.registrants} contact${recipientStats.registrants === 1 ? '' : 's'})
               </option>
-              <option value="all_saved_and_registered">
+              <option value="all_saved_and_registered" ${c.defaultAudience === 'all_saved_and_registered' ? 'selected' : ''}>
                 All Contacts on System (${recipientStats.allSavedAndRegistered} contact${recipientStats.allSavedAndRegistered === 1 ? '' : 's'} — Registered + Directory)
               </option>
             </select>

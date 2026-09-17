@@ -28,7 +28,8 @@ export async function initConferenceInfo() {
     // Live preview inputs
     const liveInputs = [
       'cf-name', 'cf-theme', 'cf-venue', 'cf-start', 'cf-end', 'cf-time', 'cf-desc', 'cf-fb', 'cf-yt',
-      'cf-momo-network', 'cf-momo-number', 'cf-momo-name', 'cf-momo-title', 'cf-momo-note'
+      'cf-momo-network', 'cf-momo-number', 'cf-momo-name', 'cf-momo-title', 'cf-momo-note',
+      'cf-reg-status', 'cf-reg-start', 'cf-reg-end', 'cf-reg-message'
     ];
     liveInputs.forEach((id) => {
       const el = document.getElementById(id);
@@ -183,6 +184,36 @@ async function loadSettings() {
       const momoNote = data.donation_note || momoFallback.note || 'Registration is 100% free. Voluntary donations support conference logistics, materials, and community outreach.';
       const noteInput = document.getElementById('cf-momo-note');
       if (noteInput) noteInput.value = momoNote;
+
+      // Registration Availability & Timeline
+      let regFallback = {};
+      if (typeof data.daily_time === 'string' && data.daily_time.startsWith('{')) {
+        try {
+          const parsed = JSON.parse(data.daily_time);
+          if (parsed.registration) regFallback = parsed.registration;
+        } catch { /* ignore */ }
+      }
+
+      let regStatusVal = 'open';
+      if (data.is_registration_open === false || regFallback.is_open === false || regFallback.status === 'closed') {
+        regStatusVal = 'closed';
+      } else if (data.is_registration_open === null && (data.registration_start_date || regFallback.start_date)) {
+        regStatusVal = 'auto';
+      } else if (regFallback.status) {
+        regStatusVal = regFallback.status;
+      }
+
+      const regStatusSelect = document.getElementById('cf-reg-status');
+      if (regStatusSelect) regStatusSelect.value = regStatusVal;
+
+      const regStartInput = document.getElementById('cf-reg-start');
+      if (regStartInput) regStartInput.value = data.registration_start_date || regFallback.start_date || '';
+
+      const regEndInput = document.getElementById('cf-reg-end');
+      if (regEndInput) regEndInput.value = data.registration_end_date || regFallback.end_date || '';
+
+      const regMsgInput = document.getElementById('cf-reg-message');
+      if (regMsgInput) regMsgInput.value = data.registration_closed_message || regFallback.closed_message || '';
 
       if (data.start_date) {
         const endInput = document.getElementById('cf-end');
@@ -632,6 +663,14 @@ function updatePreview() {
   const totalDays = scheduleDays.length;
   const totalSessions = scheduleDays.reduce((acc, d) => acc + (d.sessions?.length || 0), 0);
 
+  const regStatus = document.getElementById('cf-reg-status')?.value || 'open';
+  const regStart = document.getElementById('cf-reg-start')?.value || '';
+  let isRegClosed = (regStatus === 'closed');
+  if (regStatus === 'auto' && regStart) {
+    const today = new Date().toISOString().split('T')[0];
+    if (regStart > today) isRegClosed = true;
+  }
+
   const heroStyle = flyerSrc 
     ? `background-image: linear-gradient(150deg, rgba(11, 19, 41, 0.90) 0%, rgba(30, 58, 138, 0.85) 100%), url('${escapeHtml(flyerSrc)}');` 
     : `background: linear-gradient(150deg, #0B1329 0%, #1E3A8A 100%);`;
@@ -662,6 +701,17 @@ function updatePreview() {
       </div>
       <div class="cf-preview-body">
         <div class="cf-preview-desc">${escapeHtml(desc)}</div>
+
+        <!-- Registration Status Pill summary in Preview -->
+        <div style="background: ${isRegClosed ? '#FEF3C7' : '#DCFCE7'}; border: 1px solid ${isRegClosed ? '#FDE68A' : '#BBF7D0'}; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+          <div style="font-size: 0.82rem; font-weight: 600; color: ${isRegClosed ? '#92400E' : '#15803D'}; display: inline-flex; align-items: center; gap: 6px;">
+            <i class="bi bi-${isRegClosed ? 'lock-fill' : 'unlock-fill'}"></i>
+            <span>Registration Access:</span>
+          </div>
+          <span style="font-size: 0.78rem; font-weight: 700; color: ${isRegClosed ? '#B45309' : '#166534'};">
+            ${isRegClosed ? (regStart ? `Opens ${formatDate(regStart)}` : 'Closed / Opening Soon') : 'Open for Registration'}
+          </span>
+        </div>
         
         <!-- Schedule Pill summary in Preview -->
         <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
@@ -766,6 +816,19 @@ async function handleSave(e) {
     const userId = userData?.user?.id || null;
     const summaryTime = document.getElementById('cf-time')?.value.trim() || null;
 
+    const regStatus = document.getElementById('cf-reg-status')?.value || 'open';
+    const regStartDate = document.getElementById('cf-reg-start')?.value || null;
+    const regEndDate = document.getElementById('cf-reg-end')?.value || null;
+    const regClosedMsg = document.getElementById('cf-reg-message')?.value?.trim() || null;
+
+    const regData = {
+      status: regStatus,
+      is_open: regStatus === 'open' ? true : (regStatus === 'closed' ? false : null),
+      start_date: regStartDate,
+      end_date: regEndDate,
+      closed_message: regClosedMsg
+    };
+
     const momoData = {
       network: document.getElementById('cf-momo-network')?.value || 'MTN',
       number: document.getElementById('cf-momo-number')?.value.trim() || null,
@@ -791,6 +854,10 @@ async function handleSave(e) {
       momo_account_name: momoData.account_name,
       donation_title: momoData.title,
       donation_note: momoData.note,
+      is_registration_open: regStatus === 'open' ? true : (regStatus === 'closed' ? false : null),
+      registration_start_date: regStartDate,
+      registration_end_date: regEndDate,
+      registration_closed_message: regClosedMsg,
       updated_at: new Date().toISOString(),
       updated_by: userId,
     };
@@ -804,9 +871,9 @@ async function handleSave(e) {
         .eq('id', settingsId);
       saveError = res.error;
 
-      // Resilient fallback: if DB does not have the new schedule or momo columns yet,
+      // Resilient fallback: if DB does not have the new schedule, momo or registration columns yet,
       // serialize them inside daily_time and update cleanly without error
-      if (saveError && (saveError.message?.includes('momo') || saveError.message?.includes('donation') || saveError.message?.includes('schedule') || saveError.code === 'PGRST204')) {
+      if (saveError && (saveError.message?.includes('momo') || saveError.message?.includes('donation') || saveError.message?.includes('schedule') || saveError.message?.includes('registration') || saveError.code === 'PGRST204')) {
         console.warn('New columns not yet in DB cache; serializing into daily_time fallback.');
         delete payload.schedule;
         delete payload.momo_network;
@@ -814,10 +881,15 @@ async function handleSave(e) {
         delete payload.momo_account_name;
         delete payload.donation_title;
         delete payload.donation_note;
+        delete payload.is_registration_open;
+        delete payload.registration_start_date;
+        delete payload.registration_end_date;
+        delete payload.registration_closed_message;
         payload.daily_time = JSON.stringify({
           summary: summaryTime || '',
           schedule: scheduleDays,
-          momo: momoData
+          momo: momoData,
+          registration: regData
         });
         saveError = (await supabase.from('conference_settings').update(payload).eq('id', settingsId)).error;
       }
@@ -829,17 +901,22 @@ async function handleSave(e) {
         .single();
       saveError = res.error;
 
-      if (saveError && (saveError.message?.includes('momo') || saveError.message?.includes('donation') || saveError.message?.includes('schedule') || saveError.code === 'PGRST204')) {
+      if (saveError && (saveError.message?.includes('momo') || saveError.message?.includes('donation') || saveError.message?.includes('schedule') || saveError.message?.includes('registration') || saveError.code === 'PGRST204')) {
         delete payload.schedule;
         delete payload.momo_network;
         delete payload.momo_number;
         delete payload.momo_account_name;
         delete payload.donation_title;
         delete payload.donation_note;
+        delete payload.is_registration_open;
+        delete payload.registration_start_date;
+        delete payload.registration_end_date;
+        delete payload.registration_closed_message;
         payload.daily_time = JSON.stringify({
           summary: summaryTime || '',
           schedule: scheduleDays,
-          momo: momoData
+          momo: momoData,
+          registration: regData
         });
         const fallbackRes = await supabase.from('conference_settings').insert(payload).select('id').single();
         saveError = fallbackRes.error;

@@ -172,6 +172,152 @@ function applyConferenceSettings(data) {
 
   renderPublicSchedule(scheduleList, data);
   renderPublicDonation(data);
+  renderRegistrationAccess(data);
+}
+
+let isRegistrationLocked = false;
+
+function renderRegistrationAccess(data) {
+  if (!data) return;
+
+  let regFallback = {};
+  if (typeof data.daily_time === 'string' && data.daily_time.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(data.daily_time);
+      if (parsed.registration) regFallback = parsed.registration;
+    } catch { /* ignore */ }
+  }
+
+  // Determine status setting ('open', 'closed', 'auto')
+  let statusSetting = 'open';
+  if (data.is_registration_open === false || regFallback.is_open === false || regFallback.status === 'closed') {
+    statusSetting = 'closed';
+  } else if (regFallback.status === 'auto' || (data.is_registration_open === null && (data.registration_start_date || regFallback.start_date))) {
+    statusSetting = 'auto';
+  } else if (regFallback.status) {
+    statusSetting = regFallback.status;
+  }
+
+  const startDate = data.registration_start_date || regFallback.start_date || null;
+  const endDate = data.registration_end_date || regFallback.end_date || null;
+  const customMessage = data.registration_closed_message || regFallback.closed_message || '';
+  const confName = data.conference_name || 'Annual Conference';
+
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  let locked = false;
+  let lockReason = ''; // 'upcoming' | 'ended' | 'closed'
+
+  if (statusSetting === 'closed') {
+    locked = true;
+    lockReason = 'closed';
+  } else if (statusSetting === 'auto') {
+    if (startDate && todayStr < startDate) {
+      locked = true;
+      lockReason = 'upcoming';
+    } else if (endDate && todayStr > endDate) {
+      locked = true;
+      lockReason = 'ended';
+    }
+  } else if (statusSetting === 'open') {
+    if (endDate && todayStr > endDate) {
+      locked = true;
+      lockReason = 'ended';
+    }
+  }
+
+  isRegistrationLocked = locked;
+
+  const banner = document.getElementById('reg-status-banner');
+  const badge = document.getElementById('reg-status-banner-badge');
+  const badgeText = document.getElementById('reg-status-badge-text');
+  const title = document.getElementById('reg-status-banner-title');
+  const message = document.getElementById('reg-status-banner-message');
+  const datesWrap = document.getElementById('reg-status-banner-dates');
+  const dateText = document.getElementById('reg-status-banner-datetext');
+  const regCard = document.querySelector('.reg-card');
+  const form = document.getElementById('registration-form');
+  const submitBtn = document.getElementById('submit-btn');
+
+  if (locked) {
+    if (banner) {
+      banner.hidden = false;
+      if (badge) {
+        badge.className = 'reg-status-banner__badge';
+        if (lockReason === 'closed') badge.classList.add('badge--closed');
+        if (lockReason === 'ended') badge.classList.add('badge--ended');
+      }
+
+      if (lockReason === 'upcoming') {
+        if (badgeText) badgeText.textContent = 'Registration Opens Soon';
+        if (title) title.textContent = `${confName} Registration Opens Soon`;
+        if (message) {
+          message.textContent = customMessage || `Public registration for ${confName} is opening soon! You can review the program schedule, speakers, and venue details below. The registration form will unlock as soon as registration opens.`;
+        }
+        if (datesWrap && dateText) {
+          if (startDate) {
+            datesWrap.style.display = 'inline-flex';
+            dateText.textContent = `Registration officially opens: ${formatDate(startDate)}`;
+          } else {
+            datesWrap.style.display = 'none';
+          }
+        }
+      } else if (lockReason === 'ended') {
+        if (badgeText) badgeText.textContent = 'Registration Closed';
+        if (title) title.textContent = `${confName} Registration Has Concluded`;
+        if (message) {
+          message.textContent = customMessage || `Registration for ${confName} is now closed. Thank you for your interest!`;
+        }
+        if (datesWrap) datesWrap.style.display = 'none';
+      } else {
+        // Closed / Paused
+        if (badgeText) badgeText.textContent = 'Registration Opening Soon';
+        if (title) title.textContent = `Registration Notice for ${confName}`;
+        if (message) {
+          message.textContent = customMessage || `Registration is not yet open at this time. All conference information, speakers, and session schedule remain open for you to read below!`;
+        }
+        if (datesWrap && dateText) {
+          if (startDate) {
+            datesWrap.style.display = 'inline-flex';
+            dateText.textContent = `Registration scheduled date: ${formatDate(startDate)}`;
+          } else {
+            datesWrap.style.display = 'none';
+          }
+        }
+      }
+    }
+
+    // Lock the form inputs
+    if (regCard) regCard.classList.add('reg-card--locked');
+    if (form) {
+      form.querySelectorAll('input, select, textarea').forEach((el) => {
+        el.disabled = true;
+      });
+    }
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `
+        <i class="bi bi-lock-fill"></i>
+        <span>${lockReason === 'ended' ? 'Registration Closed' : 'Registration Opens Soon'}</span>
+      `;
+    }
+  } else {
+    // Unlocked / Open
+    if (banner) banner.hidden = true;
+    if (regCard) regCard.classList.remove('reg-card--locked');
+    if (form) {
+      form.querySelectorAll('input, select, textarea').forEach((el) => {
+        el.disabled = false;
+      });
+    }
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `
+        <span>Complete Free Registration</span>
+        <i class="bi bi-arrow-right-circle-fill"></i>
+      `;
+    }
+  }
 }
 
 function renderPublicSchedule(scheduleList, confData) {
@@ -612,6 +758,10 @@ function setupForm() {
 
 async function handleSubmit(e) {
   e.preventDefault();
+  if (isRegistrationLocked) {
+    showToast('Registration is not currently open. Please review the conference schedule and details.', 'info');
+    return;
+  }
   const form = e.target;
   const submitBtn = document.getElementById('submit-btn');
   const originalBtnHtml = submitBtn.innerHTML;

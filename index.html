@@ -140,6 +140,27 @@
       </div>
 
       <div class="reg-portal-wrap">
+        <!-- Locked / Upcoming Registration Announcement Banner -->
+        <div id="reg-status-banner" class="reg-status-banner" hidden>
+          <div class="reg-status-banner__icon">
+            <i class="bi bi-calendar2-week-fill"></i>
+          </div>
+          <div class="reg-status-banner__content">
+            <div class="reg-status-banner__badge" id="reg-status-banner-badge">
+              <i class="bi bi-clock-history"></i>
+              <span id="reg-status-badge-text">Registration Opens Soon</span>
+            </div>
+            <h3 class="reg-status-banner__title" id="reg-status-banner-title">Registration Is Opening Soon</h3>
+            <p class="reg-status-banner__message" id="reg-status-banner-message">
+              The public registration form is currently locked while preparations are underway. You can read our program schedule, speakers, and venue details below.
+            </p>
+            <div class="reg-status-banner__dates" id="reg-status-banner-dates" style="display: none;">
+              <i class="bi bi-calendar-event-fill"></i>
+              <span id="reg-status-banner-datetext"></span>
+            </div>
+          </div>
+        </div>
+
         <!-- Interactive Category Cards (Tabs) -->
         <div class="reg-category-grid tabs" role="tablist" aria-label="Registration category">
           <div class="tab reg-category-card tab--active" role="tab" aria-selected="true" data-category="person" tabindex="0">

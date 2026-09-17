@@ -196,6 +196,41 @@
               <div class="hint">Short schedule snippet displayed in the top banner of the website.</div>
             </div>
 
+            <!-- Registration Access & Timeline Controls -->
+            <div class="form-section-divider">
+              <i class="bi bi-person-check-fill"></i>
+              <span>Registration Status &amp; Timeline</span>
+            </div>
+
+            <div class="field">
+              <label for="cf-reg-status"><i class="bi bi-toggle2-on text-primary"></i> Registration Availability *</label>
+              <select id="cf-reg-status">
+                <option value="open">Open Now — Visitors can register immediately</option>
+                <option value="closed">Closed / Opening Soon — Form is locked, displays upcoming notice</option>
+                <option value="auto">Auto Timeline — Opens automatically on scheduled date</option>
+              </select>
+              <div class="hint">When closed or pending, conference information (speakers, schedule, venue) is 100% readable, but the registration form is locked with an announcement.</div>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="cf-reg-start"><i class="bi bi-calendar-plus text-primary"></i> Registration Opening Date</label>
+                <input type="date" id="cf-reg-start" />
+                <div class="hint">Date when public registration officially opens.</div>
+              </div>
+              <div class="field">
+                <label for="cf-reg-end"><i class="bi bi-calendar-x text-primary"></i> Registration Deadline (Optional)</label>
+                <input type="date" id="cf-reg-end" />
+                <div class="hint">Date when registration closes.</div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="cf-reg-message"><i class="bi bi-chat-square-quote-fill text-primary"></i> "Opening Soon" Custom Notice</label>
+              <textarea id="cf-reg-message" rows="2" placeholder="e.g. Registration for GET-WISDOM Conference opens on [Date]. Stay tuned for the public link!"></textarea>
+              <div class="hint">Custom message displayed on the website when registration is not yet open.</div>
+            </div>
+
             <!-- Detailed Multi-Day Session Builder -->
             <div class="form-section-divider" style="justify-content: space-between;">
               <div style="display: flex; align-items: center; gap: 8px;">
@@ -594,12 +629,20 @@
           <div id="invite-preview" class="invite-preview" style="margin-bottom: 16px;"></div>
 
           <div class="field">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
               <label for="invite-template" style="margin: 0;">Invitation SMS Template *</label>
-              <span id="sms-char-counter" style="font-size: 0.78rem; font-weight: 600; color: #64748B;">0 chars · 0 SMS</span>
+              <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                <button type="button" class="btn btn--ghost btn--sm" id="preset-tpl-standard" style="font-size: 0.76rem; padding: 3px 8px; border: 1px solid #CBD5E1;">
+                  <i class="bi bi-link-45deg"></i> Standard Invite
+                </button>
+                <button type="button" class="btn btn--ghost btn--sm" id="preset-tpl-save-date" style="font-size: 0.76rem; padding: 3px 8px; border: 1px solid #F59E0B; color: #B45309; background: #FFFBEB;">
+                  <i class="bi bi-calendar2-heart-fill"></i> Save the Date Alert
+                </button>
+                <span id="sms-char-counter" style="font-size: 0.78rem; font-weight: 600; color: #64748B; margin-left: 4px;">0 chars · 0 SMS</span>
+              </div>
             </div>
             <textarea id="invite-template" rows="3" placeholder="You're invited to our Annual Conference! Register here: [link]"></textarea>
-            <p class="hint" style="margin-top: 4px; font-size: 0.78rem;">The public registration link is automatically included for recipients to click and register.</p>
+            <p class="hint" style="margin-top: 4px; font-size: 0.78rem;">You can edit this message manually before sending. Choose a preset or customize your announcement.</p>
           </div>
 
           <div class="d-flex justify-content-between align-items-center flex-wrap gap-2" style="margin-top: 14px; border-top: 1px solid #E2E8F0; padding-top: 14px;">
