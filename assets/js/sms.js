@@ -16,6 +16,8 @@ const GATEWAY_LOCAL_STORAGE_KEY = 'conf_active_sms_gateway_v1';
  * Reads from Supabase sms_gateway_settings with local fallback cache.
  */
 export async function getActiveGateway() {
+  const cached = getLocalGatewayConfig();
+
   try {
     const { data, error } = await supabase
       .from('sms_gateway_settings')
@@ -25,26 +27,53 @@ export async function getActiveGateway() {
       .maybeSingle();
 
     if (!error && data) {
-      const cached = getLocalGatewayConfig();
-      if (cached && cached.provider === data.provider) {
-        return {
-          ...data,
-          api_key: cached.api_key || data.api_key_encrypted,
-          api_secret: cached.api_secret || data.api_secret_encrypted,
-          endpoint_url: cached.endpoint_url || data.endpoint_url || null,
-        };
+      // Determine real provider: don't let a 'custom' fallback override the real provider (mnotify, arkesel, etc.)
+      let provider = (data.provider || '').toLowerCase().trim();
+
+      // Check if provider was encoded in endpoint_url (e.g. 'provider:mnotify')
+      if (data.endpoint_url && data.endpoint_url.startsWith('provider:')) {
+        provider = data.endpoint_url.slice(9).toLowerCase().trim();
+      } else if (cached && cached.provider && cached.provider !== 'custom') {
+        provider = cached.provider.toLowerCase().trim();
       }
+
+      // If still custom and has no HTTP endpoint URL, default to mnotify (Ghana standard default)
+      if ((!provider || provider === 'custom') && (!data.endpoint_url || !data.endpoint_url.startsWith('http'))) {
+        provider = 'mnotify';
+      }
+
+      const realEndpoint = (cached?.endpoint_url && cached.endpoint_url.startsWith('http'))
+        ? cached.endpoint_url
+        : (data.endpoint_url && data.endpoint_url.startsWith('http') ? data.endpoint_url : null);
+
       return {
         ...data,
-        api_key: data.api_key_encrypted,
-        api_secret: data.api_secret_encrypted,
+        provider,
+        api_key: cached?.api_key || data.api_key_encrypted,
+        api_secret: cached?.api_secret || data.api_secret_encrypted,
+        endpoint_url: realEndpoint,
+        sender_id: cached?.sender_id || data.sender_id || 'CONFERENCE',
       };
     }
   } catch (err) {
     console.warn('Could not query sms_gateway_settings from Supabase, checking local cache:', err);
   }
 
-  return getLocalGatewayConfig();
+  if (cached) {
+    let p = (cached.provider || 'mnotify').toLowerCase().trim();
+    if (cached.endpoint_url && cached.endpoint_url.startsWith('provider:')) {
+      p = cached.endpoint_url.slice(9).toLowerCase().trim();
+    } else if (p === 'custom' && (!cached.endpoint_url || !cached.endpoint_url.startsWith('http'))) {
+      p = 'mnotify';
+    }
+    return {
+      ...cached,
+      provider: p,
+      endpoint_url: (cached.endpoint_url && cached.endpoint_url.startsWith('http')) ? cached.endpoint_url : null,
+    };
+  }
+
+  return null;
 }
 
 /**
@@ -96,31 +125,31 @@ async function callServerProxy(payload) {
   }
 
   // 2. Try PHP proxy (for local Apache / XAMPP environments)
-  try {
-    // Resolve relative path to root api/send-sms.php
-    const pathParts = window.location.pathname.split('/').filter(Boolean);
-    // Find project folder name if in subfolder (e.g. /conference-website/)
-    let phpUrl = '/api/send-sms.php';
-    if (pathParts.length > 0 && !pathParts[0].includes('.')) {
-      phpUrl = `/${pathParts[0]}/api/send-sms.php`;
-    }
+  const phpCandidates = [
+    new URL('api/send-sms.php', window.location.href).href,
+    '/conference-website/api/send-sms.php',
+    '/api/send-sms.php',
+  ];
 
-    const phpRes = await fetch(phpUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (phpRes.status !== 404) {
-      const json = await phpRes.json().catch(() => null);
-      if (!phpRes.ok || (json && json.ok === false)) {
-        throw new Error(json?.error || `Local SMS proxy failed (HTTP ${phpRes.status})`);
+  for (const phpUrl of phpCandidates) {
+    try {
+      const phpRes = await fetch(phpUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (phpRes.status !== 404) {
+        const json = await phpRes.json().catch(() => null);
+        if (!phpRes.ok || (json && json.ok === false)) {
+          throw new Error(json?.error || `Local SMS proxy failed (HTTP ${phpRes.status})`);
+        }
+        return { ok: true, data: json };
       }
-      return { ok: true, data: json };
-    }
-  } catch (err) {
-    lastError = err;
-    if (err.message && !err.message.includes('404') && !err.message.includes('Failed to fetch')) {
-      throw err;
+    } catch (err) {
+      lastError = err;
+      if (err.message && !err.message.includes('404') && !err.message.includes('Failed to fetch')) {
+        throw err;
+      }
     }
   }
 
@@ -146,7 +175,10 @@ async function callServerProxy(payload) {
  * Direct browser fallback for providers that allow browser CORS (e.g. Arkesel, mNotify)
  */
 async function directBrowserDispatch({ phone, message, gateway }) {
-  const provider = (gateway.provider || 'custom').toLowerCase();
+  let provider = (gateway.provider || 'mnotify').toLowerCase().trim();
+  if (gateway.endpoint_url && gateway.endpoint_url.startsWith('provider:')) {
+    provider = gateway.endpoint_url.slice(9).toLowerCase().trim();
+  }
   const apiKey = (gateway.api_key || '').trim();
   const senderId = (gateway.sender_id || 'CONFERENCE').trim();
 
@@ -179,10 +211,29 @@ async function directBrowserDispatch({ phone, message, gateway }) {
     throw new Error(v1Data?.message || 'Arkesel dispatch failed');
   }
 
-  if (provider === 'mnotify') {
+  if (provider === 'mnotify' || provider === 'custom') {
+    // If it's custom and has an actual HTTP endpoint URL, fetch that URL directly
+    if (provider === 'custom' && gateway.endpoint_url && gateway.endpoint_url.startsWith('http')) {
+      const finalUrl = gateway.endpoint_url
+        .replace('{API_KEY}', encodeURIComponent(apiKey))
+        .replace('{SENDER_ID}', encodeURIComponent(senderId))
+        .replace('{TO}', encodeURIComponent(phone))
+        .replace('{MESSAGE}', encodeURIComponent(message));
+
+      const res = await fetch(finalUrl);
+      const data = await res.json().catch(() => null);
+      if (res.ok && (!data || (data.status !== 'error' && data.ok !== false))) {
+        return { ok: true, data: data || { ok: true } };
+      }
+      throw new Error(data?.message || data?.error || `Custom gateway HTTP ${res.status}`);
+    }
+
+    // Default to mNotify dispatch (Ghana standard)
     const mnotifyPhone = (phone.startsWith('233') && phone.length === 12)
       ? '0' + phone.slice(3)
       : phone;
+
+    let v2Error = null;
 
     // 1. Try v2 quick API with ?key= query parameter
     try {
@@ -202,26 +253,31 @@ async function directBrowserDispatch({ phone, message, gateway }) {
         return { ok: true, data };
       }
       if (data && (data.error || data.message)) {
-        const errorText = data.error || data.message;
-        if (!errorText.toLowerCase().includes('server') && !errorText.toLowerCase().includes('fail')) {
-          throw new Error(errorText);
+        v2Error = data.error || data.message;
+        if (!v2Error.toLowerCase().includes('server') && !v2Error.toLowerCase().includes('fail')) {
+          throw new Error(v2Error);
         }
       }
     } catch (e) {
       if (e.message && !e.message.toLowerCase().includes('fetch')) throw e;
+      v2Error = e.message;
     }
 
     // 2. Fallback: Try v1 Query API
-    const v1Url = `https://apps.mnotify.net/smsapi?key=${encodeURIComponent(apiKey)}&to=${encodeURIComponent(mnotifyPhone)}&msg=${encodeURIComponent(message)}&sender_id=${encodeURIComponent(senderId)}`;
-    const v1Res = await fetch(v1Url);
-    const v1Data = await v1Res.json().catch(() => null);
-    if (v1Res.ok && v1Data && (!v1Data.status || v1Data.status === 'success' || v1Data.code === '1000' || v1Data.code === 1000)) {
-      return { ok: true, data: v1Data };
+    try {
+      const v1Url = `https://apps.mnotify.net/smsapi?key=${encodeURIComponent(apiKey)}&to=${encodeURIComponent(mnotifyPhone)}&msg=${encodeURIComponent(message)}&sender_id=${encodeURIComponent(senderId)}`;
+      const v1Res = await fetch(v1Url);
+      const v1Data = await v1Res.json().catch(() => null);
+      if (v1Res.ok && v1Data && (!v1Data.status || v1Data.status === 'success' || v1Data.code === '1000' || v1Data.code === 1000)) {
+        return { ok: true, data: v1Data };
+      }
+      throw new Error(v1Data?.message || v1Data?.error || v2Error || 'mNotify dispatch failed');
+    } catch (v1Err) {
+      throw new Error(v1Err.message || v2Error || 'mNotify dispatch failed');
     }
-    throw new Error(v1Data?.message || v1Data?.error || 'mNotify dispatch failed');
   }
 
-  throw new Error('Direct browser dispatch not available for this provider.');
+  throw new Error(`Direct browser dispatch is not supported for ${provider}. Use server proxy.`);
 }
 
 /**
@@ -246,49 +302,75 @@ export async function dispatchDirectSms({
   }
 
   const normalizedPhone = formatPhoneNumber(phone);
-  const provider = (gw.provider || '').toLowerCase();
+
+  let provider = (gw.provider || '').toLowerCase().trim();
+  if (gw.endpoint_url && gw.endpoint_url.startsWith('provider:')) {
+    provider = gw.endpoint_url.slice(9).toLowerCase().trim();
+  } else if ((!provider || provider === 'custom') && (!gw.endpoint_url || !gw.endpoint_url.startsWith('http'))) {
+    provider = 'mnotify';
+  }
+
+  const effectiveGw = { ...gw, provider };
   let status = 'sent';
   let errorMessage = null;
 
-  // For CORS-enabled providers like mNotify and Arkesel, direct browser fetch is fastest & most reliable
-  if (provider === 'mnotify' || provider === 'arkesel') {
+  // Direct browser dispatch works cleanly for mNotify, Arkesel, and Custom HTTP endpoints
+  const isDirectCandidate = provider === 'mnotify' || provider === 'arkesel' || (provider === 'custom' && gw.endpoint_url?.startsWith('http'));
+
+  if (isDirectCandidate) {
     try {
       await directBrowserDispatch({
         phone: normalizedPhone,
         message,
-        gateway: gw,
+        gateway: effectiveGw,
       });
       status = 'sent';
     } catch (directErr) {
-      // Fallback to server proxy if direct browser call fails
+      console.warn('Direct browser dispatch attempt returned:', directErr.message);
+      const isExplicitProviderError = directErr.message &&
+        !directErr.message.toLowerCase().includes('fetch') &&
+        !directErr.message.toLowerCase().includes('network') &&
+        !directErr.message.toLowerCase().includes('failed');
+
+      // Attempt proxy fallback
       try {
         await callServerProxy({
           action,
           phone: normalizedPhone,
           message,
-          gateway: gw,
+          gateway: effectiveGw,
           campaign_type: campaignType,
         });
         status = 'sent';
       } catch (proxyErr) {
         status = 'failed';
-        errorMessage = directErr.message || proxyErr.message || 'SMS dispatch failed';
+        errorMessage = (isExplicitProviderError ? directErr.message : null) || proxyErr.message || directErr.message || 'SMS dispatch failed';
       }
     }
   } else {
-    // For other providers (Twilio, Hubtel, Africa's Talking), execute through server proxy
+    // Other providers (Hubtel, Africa's Talking, Twilio, Vonage) run via server proxy
     try {
       await callServerProxy({
         action,
         phone: normalizedPhone,
         message,
-        gateway: gw,
+        gateway: effectiveGw,
         campaign_type: campaignType,
       });
       status = 'sent';
     } catch (proxyErr) {
-      status = 'failed';
-      errorMessage = proxyErr.message || 'SMS dispatch failed';
+      // Emergency fallback to direct browser dispatch
+      try {
+        await directBrowserDispatch({
+          phone: normalizedPhone,
+          message,
+          gateway: effectiveGw,
+        });
+        status = 'sent';
+      } catch (directErr) {
+        status = 'failed';
+        errorMessage = proxyErr.message || directErr.message || 'SMS dispatch failed';
+      }
     }
   }
 
@@ -300,7 +382,7 @@ export async function dispatchDirectSms({
       message,
       campaign_type: campaignType,
       status,
-      provider: gw.provider || 'custom',
+      provider: effectiveGw.provider || 'custom',
       error_message: errorMessage,
       sent_by: userRes?.user?.id || null,
       sent_at: new Date().toISOString(),

@@ -157,7 +157,16 @@ function normalizePhone(raw) {
  * Dispatches the SMS directly from the server to the provider
  */
 async function dispatchToProvider({ phone, message, gateway }) {
-  const provider = (gateway.provider || 'custom').toLowerCase();
+  let provider = (gateway.provider || 'mnotify').toLowerCase().trim();
+  let endpoint = (gateway.endpoint_url || '').trim();
+  if (endpoint.startsWith('provider:')) {
+    provider = endpoint.slice(9).toLowerCase().trim();
+    endpoint = '';
+  }
+  if ((provider === 'custom' || !provider) && (!endpoint || !endpoint.startsWith('http'))) {
+    provider = 'mnotify';
+  }
+
   const apiKey = (gateway.api_key || '').trim();
   const apiSecret = (gateway.api_secret || '').trim();
   const senderId = (gateway.sender_id || 'CONFERENCE').trim();
@@ -352,8 +361,8 @@ async function dispatchToProvider({ phone, message, gateway }) {
   }
 
   // Custom Gateway / Universal HTTP API
-  const endpoint = gateway.endpoint_url || 'https://api.smsghana.com/v1/sms/send';
-  let finalUrl = endpoint
+  const customEndpoint = endpoint || 'https://api.smsghana.com/v1/sms/send';
+  let finalUrl = customEndpoint
     .replace(/\{API_KEY\}/g, encodeURIComponent(apiKey))
     .replace(/\{SENDER_ID\}/g, encodeURIComponent(senderId))
     .replace(/\{TO\}/g, encodeURIComponent(normalizedPhone))
@@ -387,12 +396,21 @@ async function fetchActiveGatewayFromSupabase() {
       const list = await res.json();
       if (Array.isArray(list) && list.length > 0) {
         const item = list[0];
+        let provider = (item.provider || 'mnotify').toLowerCase().trim();
+        let endpoint = (item.endpoint_url || '').trim();
+        if (endpoint.startsWith('provider:')) {
+          provider = endpoint.slice(9).toLowerCase().trim();
+          endpoint = '';
+        }
+        if ((provider === 'custom' || !provider) && (!endpoint || !endpoint.startsWith('http'))) {
+          provider = 'mnotify';
+        }
         return {
-          provider: item.provider,
+          provider,
           sender_id: item.sender_id,
           api_key: item.api_key_encrypted,
           api_secret: item.api_secret_encrypted,
-          endpoint_url: item.endpoint_url || null,
+          endpoint_url: endpoint.startsWith('http') ? endpoint : null,
         };
       }
     }

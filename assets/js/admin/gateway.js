@@ -159,8 +159,8 @@ async function loadSettings() {
     if (secretInput && activeGw.api_secret) {
       secretInput.value = activeGw.api_secret;
     }
-    if (endpointInput && activeGw.endpoint_url) {
-      endpointInput.value = activeGw.endpoint_url;
+    if (endpointInput) {
+      endpointInput.value = (activeGw.endpoint_url && activeGw.endpoint_url.startsWith('http')) ? activeGw.endpoint_url : '';
     }
 
     if (balanceEl) {
@@ -175,21 +175,21 @@ async function loadSettings() {
       statusBadge.style.color = '#15803D';
     }
 
-    updateProviderFields(providerSelect?.value || 'africastalking');
+    updateProviderFields(providerSelect?.value || 'mnotify');
   } catch (err) {
     console.warn('Could not load active SMS gateway settings:', err);
   }
 }
 
 async function handleSave(e) {
-  e.preventDefault();
+  if (e) e.preventDefault();
   const submitBtn = document.getElementById('gw-save-btn');
   if (submitBtn) {
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="spin-animation"><i class="bi bi-arrow-repeat"></i></span> Saving &amp; Activating…';
   }
 
-  const provider = document.getElementById('gw-provider')?.value || 'custom';
+  const provider = document.getElementById('gw-provider')?.value || 'mnotify';
   const senderId = document.getElementById('gw-sender')?.value.trim() || 'CONFERENCE';
   const apiKey = document.getElementById('gw-key')?.value.trim() || '';
   const apiSecret = document.getElementById('gw-secret')?.value.trim() || '';
@@ -204,12 +204,17 @@ async function handleSave(e) {
     return;
   }
 
+  // Preserve the real provider name in endpoint_url so DB constraint fallbacks never lose provider identity
+  const effectiveEndpoint = (provider === 'custom' && endpointUrl.startsWith('http'))
+    ? endpointUrl
+    : `provider:${provider}`;
+
   const configObj = {
     provider,
     sender_id: senderId,
     api_key: apiKey,
     api_secret: apiSecret,
-    endpoint_url: endpointUrl,
+    endpoint_url: effectiveEndpoint,
     is_active: true,
   };
 
@@ -248,6 +253,7 @@ async function handleSave(e) {
       const payload = {
         provider,
         sender_id: senderId,
+        endpoint_url: effectiveEndpoint,
         is_active: true,
         api_key_encrypted: apiKey,
         api_secret_encrypted: apiSecret,
@@ -263,9 +269,11 @@ async function handleSave(e) {
       }
 
       // If database has old constraint rejecting arkesel/hubtel/mnotify, save as custom
+      // but preserve provider in endpoint_url so it is NEVER lost!
       if (dbRes?.error && (dbRes.error.message?.includes('provider') || dbRes.error.code === '23514')) {
-        console.warn('DB check constraint rejected provider; falling back to provider="custom" in DB.');
+        console.warn('DB check constraint rejected provider; falling back to provider="custom" in DB with endpoint_url tracking.');
         payload.provider = 'custom';
+        payload.endpoint_url = `provider:${provider}`;
         if (existing?.id) {
           await supabase.from('sms_gateway_settings').update(payload).eq('id', existing.id);
         } else {
@@ -297,13 +305,16 @@ async function handleTest() {
     testBtn.innerHTML = '<span class="spin-animation"><i class="bi bi-arrow-repeat"></i></span> Dispatching test…';
   }
 
+  const prov = document.getElementById('gw-provider')?.value || 'mnotify';
+  const endp = document.getElementById('gw-endpoint')?.value.trim() || '';
+
   // Use current form inputs so test works immediately with the exact entered credentials
   const currentConfig = {
-    provider: document.getElementById('gw-provider')?.value || 'custom',
+    provider: prov,
     sender_id: document.getElementById('gw-sender')?.value.trim() || 'CONFERENCE',
     api_key: document.getElementById('gw-key')?.value.trim() || '',
     api_secret: document.getElementById('gw-secret')?.value.trim() || '',
-    endpoint_url: document.getElementById('gw-endpoint')?.value.trim() || '',
+    endpoint_url: (prov === 'custom' && endp.startsWith('http')) ? endp : `provider:${prov}`,
   };
 
   const { error } = await sendTestSms(phone.trim(), currentConfig.api_key ? currentConfig : null);

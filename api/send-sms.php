@@ -66,7 +66,16 @@ function normalizePhone($raw) {
     return $digits;
 }
 
-$provider = strtolower(trim($gateway['provider'] ?? 'custom'));
+$provider = strtolower(trim($gateway['provider'] ?? 'mnotify'));
+$endpoint = trim($gateway['endpoint_url'] ?? '');
+if (strpos($endpoint, 'provider:') === 0) {
+    $provider = strtolower(trim(substr($endpoint, 9)));
+    $endpoint = '';
+}
+if (($provider === 'custom' || empty($provider)) && (empty($endpoint) || strpos($endpoint, 'http') !== 0)) {
+    $provider = 'mnotify';
+}
+
 $apiKey = trim($gateway['api_key'] ?? '');
 $apiSecret = trim($gateway['api_secret'] ?? '');
 $senderId = trim($gateway['sender_id'] ?? 'CONFERENCE');
