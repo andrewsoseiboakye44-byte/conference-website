@@ -64,16 +64,17 @@ function applyConferenceSettings(data) {
 
   const nameEl = document.getElementById('hero-name');
   if (nameEl) {
-    nameEl.textContent = data.conference_name || '';
+    nameEl.textContent = data.conference_name || 'GET-WISDOM Conference';
   }
 
   const themeEl = document.getElementById('hero-theme');
   if (themeEl) {
-    if (data.theme_scripture && data.theme_scripture.trim()) {
-      themeEl.textContent = data.theme_scripture.trim();
+    const themeText = (data.theme_scripture && data.theme_scripture.trim()) ||
+      (data.theme && data.theme.trim()) ||
+      themeEl.textContent.trim();
+    if (themeText) {
+      themeEl.textContent = themeText;
       themeEl.style.display = 'block';
-    } else {
-      themeEl.style.display = 'none';
     }
   }
 
@@ -81,12 +82,21 @@ function applyConferenceSettings(data) {
   const dates = document.getElementById('hero-dates');
   if (dates) {
     let cleanTime = '';
+    let regDates = null;
+    let scheduleFirstDate = null;
+
     if (data.daily_time) {
       if (typeof data.daily_time === 'string' && data.daily_time.trim().startsWith('{')) {
         try {
           const parsed = JSON.parse(data.daily_time);
           if (parsed.summary && typeof parsed.summary === 'string') {
             cleanTime = parsed.summary.trim();
+          }
+          if (parsed.registration) {
+            regDates = parsed.registration;
+          }
+          if (Array.isArray(parsed.schedule) && parsed.schedule.length > 0 && parsed.schedule[0].date) {
+            scheduleFirstDate = parsed.schedule[0].date;
           }
         } catch {
           cleanTime = '';
@@ -96,63 +106,84 @@ function applyConferenceSettings(data) {
       }
     }
 
+    const effectiveStart = data.start_date || (regDates && regDates.start_date) || scheduleFirstDate;
+    const effectiveEnd = data.end_date || (regDates && regDates.end_date);
+
     let dateText = '';
-    if (data.start_date && data.end_date) {
+    if (effectiveStart && effectiveEnd) {
       const opts = { day: 'numeric', month: 'short', year: 'numeric' };
-      const start = new Date(data.start_date).toLocaleDateString('en-GB', opts);
-      const end = new Date(data.end_date).toLocaleDateString('en-GB', opts);
+      const start = new Date(effectiveStart).toLocaleDateString('en-GB', opts);
+      const end = new Date(effectiveEnd).toLocaleDateString('en-GB', opts);
       dateText = cleanTime ? `${start} – ${end} · ${cleanTime}` : `${start} – ${end}`;
-    } else if (data.start_date) {
+    } else if (effectiveStart) {
       const opts = { day: 'numeric', month: 'short', year: 'numeric' };
-      const start = new Date(data.start_date).toLocaleDateString('en-GB', opts);
-      dateText = cleanTime ? `Starts ${start} · ${cleanTime}` : `Starts ${start}`;
+      const start = new Date(effectiveStart).toLocaleDateString('en-GB', opts);
+      dateText = cleanTime ? `${start} · ${cleanTime}` : `Date: ${start}`;
     } else if (cleanTime) {
       dateText = cleanTime;
+    } else if (dates.textContent && dates.textContent.trim()) {
+      dateText = dates.textContent.trim();
+    } else {
+      dateText = 'Annual Gathering & Holy Ghost Encounter';
     }
 
-    if (dateText) {
-      dates.textContent = dateText;
-      if (eyebrowEl) eyebrowEl.style.display = 'inline-flex';
-    } else {
-      if (eyebrowEl) eyebrowEl.style.display = 'none';
-    }
+    dates.textContent = dateText;
+    if (eyebrowEl) eyebrowEl.style.display = 'inline-flex';
   }
 
   const metaEl = document.getElementById('hero-meta');
   const venueWrap = document.getElementById('hero-venue-wrap');
   const venueEl = document.getElementById('hero-venue');
   if (venueEl) {
-    if (data.venue && data.venue.trim()) {
-      venueEl.textContent = data.venue.trim();
+    let venueText = (data.venue && data.venue.trim()) || venueEl.textContent.trim();
+    if (!venueText && data.daily_time && typeof data.daily_time === 'string' && data.daily_time.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(data.daily_time);
+        if (parsed.schedule?.[0]?.sessions?.[0]?.venue) {
+          venueText = parsed.schedule[0].sessions[0].venue.trim();
+        }
+      } catch { /* ignore */ }
+    }
+    if (venueText) {
+      venueEl.textContent = venueText;
       if (venueWrap) venueWrap.style.display = 'inline-flex';
       if (metaEl) metaEl.style.display = 'flex';
-    } else {
-      if (venueWrap) venueWrap.style.display = 'none';
-      if (metaEl) metaEl.style.display = 'none';
     }
   }
 
   const aboutSection = document.getElementById('about');
   const descEl = document.getElementById('about-description');
   if (descEl) {
-    if (data.description && data.description.trim()) {
-      descEl.textContent = data.description.trim();
-      if (aboutSection) aboutSection.style.display = '';
-    } else {
-      if (aboutSection) aboutSection.style.display = 'none';
+    const descText = (data.description && data.description.trim()) || descEl.textContent.trim();
+    if (descText) {
+      descEl.textContent = descText;
     }
+    if (aboutSection) aboutSection.style.display = '';
   }
 
+  // Display flyer image prominently in the hero flyer frame
+  const flyerImg = document.getElementById('hero-flyer-img');
+  const flyerWrap = document.getElementById('hero-flyer-wrap');
   if (data.flyer_image_url) {
+    if (flyerImg) {
+      flyerImg.src = data.flyer_image_url;
+      flyerImg.alt = data.conference_name ? `${data.conference_name} Official Flyer` : 'Conference Official Flyer';
+    }
+    if (flyerWrap) {
+      flyerWrap.style.display = 'block';
+    }
+
     const heroEl = document.getElementById('hero');
     if (heroEl) {
       heroEl.style.setProperty(
         'background-image',
-        `linear-gradient(150deg, rgba(11, 19, 41, 0.92) 0%, rgba(30, 58, 138, 0.88) 100%), url(${data.flyer_image_url})`
+        `linear-gradient(150deg, rgba(11, 19, 41, 0.94) 0%, rgba(30, 58, 138, 0.90) 100%), url(${data.flyer_image_url})`
       );
       heroEl.style.backgroundSize = 'cover';
       heroEl.style.backgroundPosition = 'center';
     }
+  } else {
+    if (flyerWrap) flyerWrap.style.display = 'none';
   }
 
   // Parse multi-day schedule
@@ -288,15 +319,20 @@ function renderRegistrationAccess(data) {
     }
 
     // Update top nav & hero CTA buttons to guide visitors smoothly
+    const navCtaBtn = document.getElementById('nav-cta-btn');
     const navCtaText = document.getElementById('nav-cta-text');
     const navCtaIcon = document.getElementById('nav-cta-icon');
+    const heroCtaBtn = document.getElementById('hero-cta-btn');
     const heroCtaText = document.getElementById('hero-cta-text');
     const heroCtaIcon = document.getElementById('hero-cta-icon');
 
-    if (navCtaText) navCtaText.textContent = 'Conference Info';
+    if (navCtaText) navCtaText.textContent = 'Conference Information';
     if (navCtaIcon) navCtaIcon.className = 'bi bi-info-circle-fill';
-    if (heroCtaText) heroCtaText.textContent = 'View Conference Details & Schedule';
-    if (heroCtaIcon) heroCtaIcon.className = 'bi bi-calendar-check-fill';
+    if (navCtaBtn) navCtaBtn.setAttribute('href', '#about');
+
+    if (heroCtaText) heroCtaText.textContent = 'Conference Information';
+    if (heroCtaIcon) heroCtaIcon.className = 'bi bi-info-circle-fill';
+    if (heroCtaBtn) heroCtaBtn.setAttribute('href', '#about');
 
     // Lock the form inputs
     if (regCard) regCard.classList.add('reg-card--locked');
@@ -329,15 +365,20 @@ function renderRegistrationAccess(data) {
       `;
     }
 
+    const navCtaBtn = document.getElementById('nav-cta-btn');
     const navCtaText = document.getElementById('nav-cta-text');
     const navCtaIcon = document.getElementById('nav-cta-icon');
+    const heroCtaBtn = document.getElementById('hero-cta-btn');
     const heroCtaText = document.getElementById('hero-cta-text');
     const heroCtaIcon = document.getElementById('hero-cta-icon');
 
     if (navCtaText) navCtaText.textContent = 'Register Now';
     if (navCtaIcon) navCtaIcon.className = 'bi bi-ticket-perforated-fill';
+    if (navCtaBtn) navCtaBtn.setAttribute('href', '#register');
+
     if (heroCtaText) heroCtaText.textContent = 'Register to Attend';
     if (heroCtaIcon) heroCtaIcon.className = 'bi bi-ticket-perforated-fill';
+    if (heroCtaBtn) heroCtaBtn.setAttribute('href', '#register');
   }
 }
 
