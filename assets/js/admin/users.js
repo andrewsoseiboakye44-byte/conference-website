@@ -180,6 +180,8 @@ async function handleCreate(e) {
     const proxyCandidates = [
       '/api/create-usher',
       '/.netlify/functions/create-usher',
+      new URL('api-php/create-usher.php', window.location.href).href,
+      '/conference-website/api-php/create-usher.php',
       new URL('api/create-usher.php', window.location.href).href,
       '/conference-website/api/create-usher.php',
     ];

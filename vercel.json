@@ -2,12 +2,20 @@
   "cleanUrls": true,
   "rewrites": [
     {
+      "source": "/api/send-sms",
+      "destination": "/api/send-sms.js"
+    },
+    {
+      "source": "/api/create-usher",
+      "destination": "/api/create-usher.js"
+    },
+    {
       "source": "/.netlify/functions/send-sms",
-      "destination": "/api/send-sms"
+      "destination": "/api/send-sms.js"
     },
     {
       "source": "/.netlify/functions/create-usher",
-      "destination": "/api/create-usher"
+      "destination": "/api/create-usher.js"
     }
   ],
   "headers": [

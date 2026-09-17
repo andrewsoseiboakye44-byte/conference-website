@@ -129,6 +129,9 @@ async function callServerProxy(payload) {
 
   // 2. Try PHP proxy (for local Apache / XAMPP environments)
   const phpCandidates = [
+    new URL('api-php/send-sms.php', window.location.href).href,
+    '/conference-website/api-php/send-sms.php',
+    '/api-php/send-sms.php',
     new URL('api/send-sms.php', window.location.href).href,
     '/conference-website/api/send-sms.php',
     '/api/send-sms.php',
