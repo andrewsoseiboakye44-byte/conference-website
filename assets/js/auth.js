@@ -23,7 +23,8 @@ export async function signIn(email, password) {
 
 /** Usher login: converts a plain username into the internal usher email. */
 export async function signInAsUsher(username, password) {
-  const email = `${username.trim().toLowerCase()}@usher.local`;
+  const cleanUsername = username.trim().toLowerCase().replace(/[^a-z0-9_.-]/g, '');
+  const email = `${cleanUsername}@usher.local`;
   return signIn(email, password);
 }
 
