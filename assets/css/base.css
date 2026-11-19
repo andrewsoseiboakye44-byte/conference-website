@@ -541,6 +541,35 @@ button {
   text-align: left;
 }
 
+.app-footer__left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.app-footer__staff-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #94A3B8;
+  text-decoration: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  transition: all 0.15s ease;
+}
+
+.app-footer__staff-link:hover {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+  text-decoration: none;
+}
+
 .app-footer__developer {
   display: inline-flex;
   align-items: center;
@@ -643,6 +672,12 @@ button {
     text-align: center;
     justify-content: center;
     gap: 12px;
+  }
+  .app-footer__left {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
   }
   .app-footer__copy {
     text-align: center;

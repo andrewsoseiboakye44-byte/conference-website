@@ -17,6 +17,13 @@ async function init() {
   setupPasswordToggles();
   document.getElementById('admin-login-form').addEventListener('submit', handleAdminLogin);
   document.getElementById('usher-login-form').addEventListener('submit', handleUsherLogin);
+
+  // Auto-switch to Usher tab if URL contains #usher or ?role=usher
+  const params = new URLSearchParams(window.location.search);
+  if (window.location.hash.toLowerCase() === '#usher' || params.get('role')?.toLowerCase() === 'usher') {
+    const usherTab = document.querySelector('.tab[data-role="usher"]');
+    if (usherTab) usherTab.click();
+  }
 }
 
 function setupTabs() {

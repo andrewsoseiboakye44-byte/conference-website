@@ -883,17 +883,20 @@ function renderContactsTable() {
 async function handleSingleResend(id, phone, name) {
   if (!confirm(`Send invitation SMS to ${name ? `${name} (${phone})` : phone}?`)) return;
 
+  const targetUrl = regUrl || new URL('./index.html', window.location.href).href;
   const message = document.getElementById('invite-template')?.value.trim() ||
-    `You are warmly invited to our Conference! Register here: ${regUrl}`;
+    `You are warmly invited to our Conference! Register here: ${targetUrl}`;
 
   try {
-    await supabase.functions.invoke('send-bulk-sms', {
-      body: {
-        campaign_type: 'invite_contacts',
-        phone,
-        message,
-      },
+    const smsRes = await dispatchDirectSms({
+      phone,
+      message,
+      campaign_type: 'invite_contacts',
     });
+
+    if (!smsRes || !smsRes.success) {
+      throw new Error(smsRes?.error || 'SMS dispatch failed');
+    }
 
     await supabase
       .from('invitations')
@@ -904,7 +907,7 @@ async function handleSingleResend(id, phone, name) {
     await loadContactsDirectory();
   } catch (err) {
     console.error('Failed to resend SMS:', err);
-    showToast('Failed to send SMS. Check gateway settings.', 'error');
+    showToast(`Failed to send SMS: ${err.message || 'Check gateway settings.'}`, 'error');
   }
 }
 
