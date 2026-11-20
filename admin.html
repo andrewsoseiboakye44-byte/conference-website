@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Admin Dashboard — Conference Management System</title>
+  <title>Admin Dashboard — GET-WISDOM Conference</title>
+  <link rel="icon" type="image/png" href="./favicon.png" />
+  <link rel="apple-touch-icon" href="./assets/images/logo.png" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="./assets/css/base.css?v=3.2" />
   <link rel="stylesheet" href="./assets/css/admin.css?v=3.2" />
@@ -15,10 +17,10 @@
   <div id="admin-app-loader" class="admin-app-loader" role="status" aria-live="polite">
     <div class="admin-app-loader__content">
       <div class="admin-app-loader__brand">
-        <div class="admin-app-loader__icon-box">
-          <i class="bi bi-shield-shaded"></i>
+        <div class="admin-app-loader__icon-box" style="padding: 0; overflow: hidden; background: #0D2847;">
+          <img src="./assets/images/logo.png" alt="GWC Logo" style="width: 100%; height: 100%; object-fit: cover;" />
         </div>
-        <div class="admin-app-loader__title">Conference Admin</div>
+        <div class="admin-app-loader__title">GET-WISDOM Admin</div>
       </div>
       <div class="admin-app-loader__spinner"></div>
       <div class="admin-app-loader__status" id="admin-app-loader-status">Securing administrative session…</div>
@@ -50,8 +52,8 @@
     <!-- ============ Sidebar ============ -->
     <aside class="admin-sidebar" id="admin-sidebar" role="navigation" aria-label="Admin Navigation">
       <div class="admin-sidebar__brand">
-        <i class="bi bi-shield-shaded"></i>
-        <span>Conference Admin</span>
+        <img src="./assets/images/logo.png" alt="GWC Logo" class="admin-sidebar__logo-img" />
+        <span>GET-WISDOM Admin</span>
       </div>
       <nav class="admin-nav">
         <button class="admin-nav__item admin-nav__item--active" data-view="dashboard" aria-current="page">

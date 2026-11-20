@@ -8,6 +8,8 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title>GET-WISDOM Registration Portal</title>
+  <link rel="icon" type="image/png" href="./favicon.png" />
+  <link rel="apple-touch-icon" href="./assets/images/logo.png" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="./assets/css/base.css?v=3.2" />
   <link rel="stylesheet" href="./assets/css/public.css?v=3.2" />
@@ -18,10 +20,15 @@
   <!-- ============ Top Navigation Bar ============ -->
   <header class="site-nav">
     <div class="container site-nav__inner">
-      <div class="site-nav__brand">
-        <span class="site-nav__brand-icon"><i class="bi bi-shield-shaded"></i></span>
-        <span>GET-WISDOM Registration Portal</span>
-      </div>
+      <a href="./index.html" class="site-nav__brand" title="GET-WISDOM Conference">
+        <div class="site-nav__logo-wrapper">
+          <img src="./assets/images/logo.png" alt="GET-WISDOM Conference Logo" class="site-nav__logo-img" />
+        </div>
+        <div class="site-nav__brand-details">
+          <span class="site-nav__brand-title">GET-WISDOM</span>
+          <span class="site-nav__brand-subtitle">Conference 2026</span>
+        </div>
+      </a>
       <div class="site-nav__actions">
         <a href="#about" class="btn btn--outline-light btn--sm" id="nav-info-btn">
           <i class="bi bi-info-circle-fill"></i>

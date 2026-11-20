@@ -25,23 +25,63 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  font-weight: 800;
+  text-decoration: none;
+  color: #FFFFFF;
+  transition: opacity 0.2s ease;
+}
+
+.site-nav__brand:hover {
+  text-decoration: none;
+  opacity: 0.95;
+}
+
+.site-nav__logo-wrapper {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0D2847;
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.site-nav__brand:hover .site-nav__logo-wrapper {
+  transform: translateY(-1px) scale(1.05);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.45);
+}
+
+.site-nav__logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.site-nav__brand-details {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.site-nav__brand-title {
   font-size: 1.15rem;
+  font-weight: 800;
   color: #FFFFFF;
   letter-spacing: -0.02em;
 }
 
-.site-nav__brand-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
-  color: #FFFFFF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+.site-nav__brand-subtitle {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #94A3B8;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .site-nav__actions {
@@ -50,8 +90,28 @@
   gap: 10px;
 }
 
-@media (max-width: 580px) {
-  .site-nav__brand span:not(.site-nav__brand-icon) {
+@media (max-width: 640px) {
+  .site-nav__logo-wrapper {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+  }
+  .site-nav__brand-title {
+    font-size: 1rem;
+  }
+  .site-nav__brand-subtitle {
+    font-size: 0.65rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .site-nav__brand {
+    gap: 8px;
+  }
+  .site-nav__brand-subtitle {
+    display: none;
+  }
+  .site-nav__brand-title {
     font-size: 0.95rem;
   }
 }
@@ -1226,13 +1286,7 @@
     padding: 10px 0;
   }
   .site-nav__brand {
-    font-size: 1.02rem;
-    gap: 8px;
-  }
-  .site-nav__brand-icon {
-    width: 32px;
-    height: 32px;
-    font-size: 1rem;
+    gap: 10px;
   }
   .site-nav__actions .btn {
     padding: 7px 14px;

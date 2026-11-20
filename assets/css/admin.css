@@ -230,6 +230,16 @@
   color: #FFFFFF;
 }
 
+.admin-sidebar__logo-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
 .admin-sidebar__brand i {
   color: #F59E0B;
   font-size: 1.4rem;
