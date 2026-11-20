@@ -1163,6 +1163,58 @@
   box-shadow: 0 2px 6px rgba(16, 185, 129, 0.35);
 }
 
+.momo-ref-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #FFFBEB;
+  border: 1.5px dashed #FDE68A;
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-top: 10px;
+  transition: all 0.2s ease;
+}
+
+.momo-ref-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.momo-ref-label {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #92400E;
+}
+
+.momo-ref-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #78350F;
+  letter-spacing: 0.04em;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  background: #FEF3C7;
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid #FCD34D;
+}
+
+.btn-copy-momo--ref {
+  background: #FFFFFF;
+  border: 1.5px solid #FCD34D;
+  color: #92400E;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+
+.btn-copy-momo--ref:hover {
+  background: #FEF3C7;
+  border-color: #F59E0B;
+  color: #78350F;
+}
+
 .momo-instructions-row {
   display: flex;
   align-items: center;

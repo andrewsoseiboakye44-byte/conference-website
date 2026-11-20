@@ -593,15 +593,20 @@ function renderPublicDonation(data) {
     network: data?.momo_network || 'MTN',
     account_name: data?.momo_account_name || '',
     title: data?.donation_title || 'Support This Conference',
+    reference: data?.momo_reference || '',
     note: data?.donation_note || '',
   };
 
   // Fallback if DB columns haven't been migrated yet and data is packed in daily_time
-  if (!momoData.number && typeof data?.daily_time === 'string' && data.daily_time.startsWith('{')) {
+  if (typeof data?.daily_time === 'string' && data.daily_time.startsWith('{')) {
     try {
       const parsed = JSON.parse(data.daily_time);
-      if (parsed.momo && parsed.momo.number) {
-        momoData = { ...momoData, ...parsed.momo };
+      if (parsed.momo) {
+        momoData = {
+          ...momoData,
+          ...parsed.momo,
+          reference: data?.momo_reference || parsed.momo.reference || momoData.reference || '',
+        };
       }
     } catch { /* ignore */ }
   }
@@ -619,6 +624,7 @@ function renderPublicDonation(data) {
   const cleanNetwork = momoData.network?.trim() || 'MTN';
   const cleanName = momoData.account_name?.trim() || '';
   const cleanTitle = momoData.title?.trim() || 'Support This Conference';
+  const cleanReference = momoData.reference?.trim() || '';
   const cleanNote = momoData.note?.trim() || '';
 
   const networkLabels = {
@@ -645,6 +651,36 @@ function renderPublicDonation(data) {
 
     const numEl = document.getElementById('donor-momo-number');
     if (numEl) numEl.textContent = cleanNumber;
+
+    // Reference Box
+    const refWrap = document.getElementById('donor-momo-ref-wrap');
+    const refEl = document.getElementById('donor-momo-ref');
+    if (refWrap && refEl) {
+      if (cleanReference) {
+        refEl.textContent = cleanReference;
+        refWrap.style.display = 'flex';
+      } else {
+        refWrap.style.display = 'none';
+      }
+    }
+
+    const copyRefBtn = document.getElementById('btn-copy-momo-ref');
+    if (copyRefBtn && !copyRefBtn.dataset.bound) {
+      copyRefBtn.dataset.bound = 'true';
+      copyRefBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(cleanReference).then(() => {
+          const origHtml = copyRefBtn.innerHTML;
+          copyRefBtn.innerHTML = '<i class="bi bi-check2-circle"></i> <span>Copied!</span>';
+          copyRefBtn.classList.add('copied');
+          setTimeout(() => {
+            copyRefBtn.innerHTML = origHtml;
+            copyRefBtn.classList.remove('copied');
+          }, 2000);
+        }).catch(() => {
+          prompt('Copy Reference:', cleanReference);
+        });
+      });
+    }
 
     const noteEl = document.getElementById('donor-momo-note');
     const noteWrap = document.getElementById('donor-momo-note-wrap');
@@ -689,6 +725,34 @@ function renderPublicDonation(data) {
 
     const passNameEl = document.getElementById('pass-momo-name');
     if (passNameEl) passNameEl.textContent = cleanName ? `(${cleanName})` : '';
+
+    // Reference on Digital Pass
+    const passRefWrap = document.getElementById('pass-momo-ref-wrap');
+    const passRefEl = document.getElementById('pass-momo-ref');
+    if (passRefWrap && passRefEl) {
+      if (cleanReference) {
+        passRefEl.textContent = cleanReference;
+        passRefWrap.style.display = 'flex';
+      } else {
+        passRefWrap.style.display = 'none';
+      }
+    }
+
+    const passCopyRefBtn = document.getElementById('btn-copy-pass-ref');
+    if (passCopyRefBtn && !passCopyRefBtn.dataset.bound) {
+      passCopyRefBtn.dataset.bound = 'true';
+      passCopyRefBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(cleanReference).then(() => {
+          const origHtml = passCopyRefBtn.innerHTML;
+          passCopyRefBtn.innerHTML = '<i class="bi bi-check2-circle"></i> <span>Copied!</span>';
+          setTimeout(() => {
+            passCopyRefBtn.innerHTML = origHtml;
+          }, 2000);
+        }).catch(() => {
+          prompt('Copy Reference:', cleanReference);
+        });
+      });
+    }
 
     const passCopyBtn = document.getElementById('btn-copy-pass-momo');
     if (passCopyBtn && !passCopyBtn.dataset.bound) {

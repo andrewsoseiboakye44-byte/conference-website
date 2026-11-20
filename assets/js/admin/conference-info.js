@@ -28,7 +28,7 @@ export async function initConferenceInfo() {
     // Live preview inputs
     const liveInputs = [
       'cf-name', 'cf-theme', 'cf-venue', 'cf-start', 'cf-end', 'cf-time', 'cf-desc', 'cf-fb', 'cf-yt',
-      'cf-momo-network', 'cf-momo-number', 'cf-momo-name', 'cf-momo-title', 'cf-momo-note',
+      'cf-momo-network', 'cf-momo-number', 'cf-momo-name', 'cf-momo-title', 'cf-momo-ref', 'cf-momo-note',
       'cf-reg-status', 'cf-reg-start', 'cf-reg-end', 'cf-reg-message'
     ];
     liveInputs.forEach((id) => {
@@ -180,6 +180,10 @@ async function loadSettings() {
       const momoTitle = data.donation_title || momoFallback.title || 'Partner & Support This Conference';
       const titleInput = document.getElementById('cf-momo-title');
       if (titleInput) titleInput.value = momoTitle;
+
+      const momoRef = data.momo_reference || momoFallback.reference || 'DONATION';
+      const refInput = document.getElementById('cf-momo-ref');
+      if (refInput) refInput.value = momoRef;
 
       const momoNote = data.donation_note || momoFallback.note || 'Registration is 100% free. Voluntary donations support conference logistics, materials, and community outreach.';
       const noteInput = document.getElementById('cf-momo-note');
@@ -645,6 +649,7 @@ function updatePreview() {
   const momoNum = document.getElementById('cf-momo-number')?.value.trim() || '';
   const momoName = document.getElementById('cf-momo-name')?.value.trim() || '';
   const momoTitle = document.getElementById('cf-momo-title')?.value.trim() || 'Partner & Support This Conference';
+  const momoRef = document.getElementById('cf-momo-ref')?.value.trim() || 'DONATION';
   const momoNote = document.getElementById('cf-momo-note')?.value.trim() || '';
 
   let flyerSrc = null;
@@ -834,6 +839,7 @@ async function handleSave(e) {
       number: document.getElementById('cf-momo-number')?.value.trim() || null,
       account_name: document.getElementById('cf-momo-name')?.value.trim() || null,
       title: document.getElementById('cf-momo-title')?.value.trim() || null,
+      reference: document.getElementById('cf-momo-ref')?.value.trim() || null,
       note: document.getElementById('cf-momo-note')?.value.trim() || null,
     };
 
@@ -853,6 +859,7 @@ async function handleSave(e) {
       momo_number: momoData.number,
       momo_account_name: momoData.account_name,
       donation_title: momoData.title,
+      momo_reference: momoData.reference,
       donation_note: momoData.note,
       is_registration_open: regStatus === 'open' ? true : (regStatus === 'closed' ? false : null),
       registration_start_date: regStartDate,
@@ -880,6 +887,7 @@ async function handleSave(e) {
         delete payload.momo_number;
         delete payload.momo_account_name;
         delete payload.donation_title;
+        delete payload.momo_reference;
         delete payload.donation_note;
         delete payload.is_registration_open;
         delete payload.registration_start_date;
@@ -907,6 +915,7 @@ async function handleSave(e) {
         delete payload.momo_number;
         delete payload.momo_account_name;
         delete payload.donation_title;
+        delete payload.momo_reference;
         delete payload.donation_note;
         delete payload.is_registration_open;
         delete payload.registration_start_date;
