@@ -111,15 +111,18 @@ async function loadTable() {
       <td>${r.is_first_time ? '<span class="badge badge--yes">Yes</span>' : '—'}</td>
       <td><span class="badge ${r.is_checked_in ? 'badge--yes' : 'badge--no'}">${r.is_checked_in ? 'Checked in' : 'Not yet'}</span></td>
       <td>
-        <div class="d-flex align-items-center gap-1">
-          <button class="btn btn--outline btn--sm toggle-checkin" data-id="${r.id}" data-checked="${r.is_checked_in}" title="${r.is_checked_in ? 'Undo attendance check-in' : 'Mark as checked in'}" style="padding: 4px 10px; font-size: 0.78rem;">
-            ${r.is_checked_in ? 'Undo' : 'Check in'}
+        <div class="d-flex align-items-center gap-1" style="flex-wrap: nowrap;">
+          <button class="btn btn--outline btn--sm toggle-checkin" data-id="${r.id}" data-checked="${r.is_checked_in}" title="${r.is_checked_in ? 'Undo attendance check-in' : 'Mark as checked in'}" style="padding: 4px 10px; font-size: 0.78rem; white-space: nowrap;">
+            <i class="bi ${r.is_checked_in ? 'bi-arrow-counterclockwise' : 'bi-check2'}"></i>
+            <span>${r.is_checked_in ? 'Undo' : 'Check in'}</span>
           </button>
-          <button class="btn btn--outline btn--sm view-registrant-btn" data-id="${r.id}" title="View all details" style="padding: 4px 8px; font-size: 0.8rem; color: #2563EB;">
+          <button class="btn btn--outline btn--sm view-registrant-btn" data-id="${r.id}" title="View all attendee details" style="padding: 4px 8px; font-size: 0.78rem; color: #2563EB; white-space: nowrap;">
             <i class="bi bi-eye-fill"></i>
+            <span>Details</span>
           </button>
-          <button class="btn btn--outline btn--sm delete-registrant-btn" data-id="${r.id}" data-name="${escapeHtml(r.full_name)}" title="Delete registrant and details" style="padding: 4px 8px; font-size: 0.8rem; color: #DC2626; border-color: #FCA5A5;">
+          <button class="btn btn--outline btn--sm delete-registrant-btn" data-id="${r.id}" data-name="${escapeHtml(r.full_name)}" title="Delete registrant and details" style="padding: 4px 10px; font-size: 0.78rem; color: #DC2626; border-color: #F87171; background: #FEF2F2; font-weight: 700; white-space: nowrap;">
             <i class="bi bi-trash3-fill"></i>
+            <span>Delete</span>
           </button>
         </div>
       </td>

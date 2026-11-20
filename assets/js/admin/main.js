@@ -12,7 +12,7 @@ import '../utils.js';
 import { initDashboard } from './dashboard.js';
 import { initConferenceInfo } from './conference-info.js';
 import { initSpeakers } from './speakers.js';
-import { initRegistrants } from './registrants.js';
+import { initRegistrants } from './registrants.js?v=3.3';
 import { initInvite, initContactsDirectory, loadContactsDirectory, loadBatches } from './invite.js';
 import { initCampaigns } from './campaigns.js';
 import { initGateway } from './gateway.js';
