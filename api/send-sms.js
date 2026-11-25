@@ -7,6 +7,7 @@
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://rhdqrocagrkogbztwpmg.supabase.co';
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'sb_publishable_rmQ97GXrUaGcsGIIFrdUeg_zj_5gfeI';
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -36,9 +37,56 @@ function normalizePhone(raw) {
 }
 
 /**
- * Fallback to read active gateway directly from Supabase REST API
+ * Fallback to read active gateway directly from Supabase REST API or environment.
+ * Multi-tier resolution:
+ * 1. Service role query on sms_gateway_settings (bypasses RLS)
+ * 2. Security definer RPC get_active_sms_gateway_for_dispatch
+ * 3. Anon query on sms_gateway_settings
+ * 4. Anon query on conference_settings (daily_time.sms_gateway)
+ * 5. Environment variables (SMS_API_KEY, etc.)
  */
 async function fetchActiveGatewayFromSupabase() {
+  // Tier 1: Service role key if available in environment
+  if (SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/sms_gateway_settings?is_active=eq.true&limit=1`, {
+        headers: {
+          apikey: SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+      });
+      if (res.ok) {
+        const list = await res.json();
+        if (Array.isArray(list) && list.length > 0 && list[0].api_key_encrypted) {
+          return formatGatewayItem(list[0]);
+        }
+      }
+    } catch (e) {
+      console.warn('Service role gateway lookup note:', e);
+    }
+  }
+
+  // Tier 2: Call security definer RPC function
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_active_sms_gateway_for_dispatch`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && (data.api_key || data.api_key_encrypted)) {
+        return formatGatewayItem(data);
+      }
+    }
+  } catch (e) {
+    // RPC may not be installed yet
+  }
+
+  // Tier 3: Query sms_gateway_settings directly with anon key
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/sms_gateway_settings?is_active=eq.true&limit=1`, {
       headers: {
@@ -48,30 +96,68 @@ async function fetchActiveGatewayFromSupabase() {
     });
     if (res.ok) {
       const list = await res.json();
-      if (Array.isArray(list) && list.length > 0) {
-        const item = list[0];
-        let provider = (item.provider || 'mnotify').toLowerCase().trim();
-        let endpoint = (item.endpoint_url || '').trim();
-        if (endpoint.startsWith('provider:')) {
-          provider = endpoint.slice(9).toLowerCase().trim();
-          endpoint = '';
-        }
-        if ((provider === 'custom' || !provider) && (!endpoint || !endpoint.startsWith('http'))) {
-          provider = 'mnotify';
-        }
-        return {
-          provider,
-          sender_id: item.sender_id,
-          api_key: item.api_key_encrypted,
-          api_secret: item.api_secret_encrypted,
-          endpoint_url: endpoint.startsWith('http') ? endpoint : null,
-        };
+      if (Array.isArray(list) && list.length > 0 && (list[0].api_key_encrypted || list[0].api_key)) {
+        return formatGatewayItem(list[0]);
       }
     }
   } catch (err) {
-    console.warn('Could not query Supabase for gateway settings in serverless function:', err);
+    console.warn('Anon gateway query note:', err);
   }
+
+  // Tier 4: Query conference_settings (daily_time.sms_gateway)
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/conference_settings?select=daily_time&limit=1`, {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+    });
+    if (res.ok) {
+      const list = await res.json();
+      const rawTime = list?.[0]?.daily_time;
+      if (rawTime) {
+        const parsed = typeof rawTime === 'string' ? JSON.parse(rawTime) : rawTime;
+        const syncGw = parsed?.sms_gateway;
+        if (syncGw && syncGw.api_key) {
+          return formatGatewayItem(syncGw);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('conference_settings gateway check note:', err);
+  }
+
+  // Tier 5: Direct environment variables
+  if (process.env.SMS_API_KEY) {
+    return {
+      provider: (process.env.SMS_PROVIDER || 'mnotify').toLowerCase().trim(),
+      sender_id: process.env.SMS_SENDER_ID || 'CONFERENCE',
+      api_key: process.env.SMS_API_KEY.trim(),
+      api_secret: (process.env.SMS_API_SECRET || '').trim(),
+      endpoint_url: process.env.SMS_ENDPOINT_URL || null,
+    };
+  }
+
   return null;
+}
+
+function formatGatewayItem(item) {
+  let provider = (item.provider || 'mnotify').toLowerCase().trim();
+  let endpoint = (item.endpoint_url || '').trim();
+  if (endpoint.startsWith('provider:')) {
+    provider = endpoint.slice(9).toLowerCase().trim();
+    endpoint = '';
+  }
+  if ((provider === 'custom' || !provider) && (!endpoint || !endpoint.startsWith('http'))) {
+    provider = 'mnotify';
+  }
+  return {
+    provider,
+    sender_id: item.sender_id || 'CONFERENCE',
+    api_key: (item.api_key || item.api_key_encrypted || '').trim(),
+    api_secret: (item.api_secret || item.api_secret_encrypted || '').trim(),
+    endpoint_url: endpoint.startsWith('http') ? endpoint : null,
+  };
 }
 
 /**

@@ -9,6 +9,58 @@ import { supabase } from '../config.js';
 import { sendTestSms, getActiveGateway, saveLocalGatewayConfig } from '../sms.js';
 import { showToast, escapeHtml } from '../utils.js';
 
+/**
+ * Synchronizes the active SMS gateway configuration into public conference_settings (daily_time.sms_gateway).
+ * This ensures that EVERY attendee on index.html (including those registering via forwarded links or on phones
+ * with no admin session) immediately receives their automated SMS confirmation without hitting RLS blockers.
+ */
+export async function syncGatewayToPublicSettings(gw) {
+  if (!gw || !gw.api_key) return;
+  try {
+    const { data: conf } = await supabase
+      .from('conference_settings')
+      .select('id, daily_time')
+      .limit(1)
+      .maybeSingle();
+
+    if (!conf) return;
+
+    let parsed = {};
+    if (conf.daily_time) {
+      try {
+        parsed = typeof conf.daily_time === 'string' ? JSON.parse(conf.daily_time) : conf.daily_time;
+      } catch {}
+    }
+
+    const current = parsed.sms_gateway;
+    if (
+      current &&
+      current.provider === gw.provider &&
+      current.sender_id === gw.sender_id &&
+      current.api_key === gw.api_key &&
+      current.endpoint_url === gw.endpoint_url
+    ) {
+      return; // Already synchronized
+    }
+
+    parsed.sms_gateway = {
+      provider: gw.provider,
+      sender_id: gw.sender_id || 'CONFERENCE',
+      api_key: gw.api_key,
+      api_secret: gw.api_secret || '',
+      endpoint_url: gw.endpoint_url || null,
+      updated_at: new Date().toISOString(),
+    };
+
+    await supabase
+      .from('conference_settings')
+      .update({ daily_time: JSON.stringify(parsed) })
+      .eq('id', conf.id);
+  } catch (err) {
+    console.warn('Could not sync SMS gateway to conference_settings:', err);
+  }
+}
+
 const PROVIDER_INFO = {
   africastalking: {
     keyLabel: "Africa's Talking API Key *",
@@ -139,6 +191,9 @@ async function loadSettings() {
       updateProviderFields(document.getElementById('gw-provider')?.value || 'mnotify');
       return;
     }
+
+    // Ensure public conference settings are in sync with active gateway
+    syncGatewayToPublicSettings(activeGw).catch(() => {});
 
     const providerSelect = document.getElementById('gw-provider');
     const senderInput = document.getElementById('gw-sender');
@@ -285,6 +340,9 @@ async function handleSave(e) {
       console.warn('Direct database insert into sms_gateway_settings failed:', dbErr);
     }
   }
+
+  // Sync to public conference_settings immediately
+  syncGatewayToPublicSettings(activeConfig).catch(() => {});
 
   if (submitBtn) {
     submitBtn.disabled = false;

@@ -26,7 +26,7 @@
         </div>
         <div class="site-nav__brand-details">
           <span class="site-nav__brand-title">GET-WISDOM</span>
-          <span class="site-nav__brand-subtitle">Conference 2026</span>
+          <span class="site-nav__brand-subtitle">Conference 2027</span>
         </div>
       </a>
       <div class="site-nav__actions">
@@ -497,8 +497,14 @@
             </div>
             <h3 style="font-size: 1.8rem; font-weight: 800; color: #0F172A; margin: 0 0 6px;">Registration Confirmed!
             </h3>
-            <p style="color: #64748B; font-size: 0.98rem; max-width: 520px; margin: 0 auto 24px;">A confirmation SMS
-              with your entry details has been dispatched to your phone. Present this digital pass at the entrance.</p>
+            <p style="color: #64748B; font-size: 0.98rem; max-width: 520px; margin: 0 auto 16px;">A confirmation SMS
+              with your entry details is being dispatched to your phone. Present this digital pass at the entrance.</p>
+
+            <div class="pass-sms-indicator" id="pass-sms-status"
+              style="margin: 0 auto 22px; max-width: 480px; padding: 10px 18px; border-radius: 999px; font-size: 0.88rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #ECFDF5; border: 1px solid #A7F3D0; color: #065F46; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.08);">
+              <span class="spinner" style="width: 14px; height: 14px; border-width: 2px; border-color: #059669; border-top-color: transparent;"></span>
+              <span>Sending confirmation SMS to your phone…</span>
+            </div>
 
             <div class="pass-card">
               <div class="pass-card-header">
@@ -565,7 +571,8 @@
                     <div style="display: flex; align-items: center; gap: 6px;">
                       <i class="bi bi-tag-fill" style="color: #B45309; font-size: 0.85rem;"></i>
                       <span style="font-size: 0.8rem; font-weight: 600; color: #78350F;">Giving Reference:</span>
-                      <strong id="pass-momo-ref" style="font-size: 0.95rem; font-weight: 800; color: #92400E; letter-spacing: 0.05em; font-family: monospace;">DONATION</strong>
+                      <strong id="pass-momo-ref"
+                        style="font-size: 0.95rem; font-weight: 800; color: #92400E; letter-spacing: 0.05em; font-family: monospace;">DONATION</strong>
                     </div>
                     <button type="button" class="btn btn--outline btn--sm" id="btn-copy-pass-ref"
                       style="border-color: #FCD34D; color: #92400E; font-weight: 700; background: #FFFFFF; padding: 3px 8px; font-size: 0.75rem;">
@@ -594,7 +601,8 @@
   <footer class="app-footer app-footer--dark">
     <div class="container app-footer__inner">
       <div class="app-footer__left">
-        <p class="app-footer__copy">&copy; <span class="footer-year" id="footer-year"></span> GET-WISDOM Conference. All rights reserved.</p>
+        <p class="app-footer__copy">&copy; <span class="footer-year" id="footer-year"></span> GET-WISDOM Conference. All
+          rights reserved.</p>
         <a href="./login.html" class="app-footer__staff-link" title="Staff Portal Sign In">
           <i class="bi bi-shield-lock-fill"></i>
           <span>Staff Portal</span>
@@ -611,7 +619,7 @@
     </div>
   </footer>
 
-  <script type="module" src="./assets/js/public.js?v=3.2"></script>
+  <script type="module" src="./assets/js/public.js?v=3.4"></script>
 </body>
 
 </html>

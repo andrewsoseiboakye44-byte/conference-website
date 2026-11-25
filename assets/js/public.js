@@ -967,11 +967,40 @@ async function handleSubmit(e) {
   }
 
   // Send instant registration confirmation SMS to attendee
+  const smsStatusEl = document.getElementById('pass-sms-status');
+  if (smsStatusEl) {
+    smsStatusEl.style.display = 'inline-flex';
+    smsStatusEl.innerHTML = `
+      <span class="spinner" style="width: 14px; height: 14px; border-width: 2px; border-color: #059669; border-top-color: transparent;"></span>
+      <span>Sending confirmation SMS to ${phoneRaw}…</span>
+    `;
+  }
+
   sendRegistrationConfirmationSms({
     fullName,
     phone,
     registrantId: data?.id,
-  }).catch((err) => console.warn('Confirmation SMS failed to dispatch:', err));
+  }).then((res) => {
+    if (!smsStatusEl) return;
+    if (res?.status === 'sent') {
+      smsStatusEl.style.background = '#ECFDF5';
+      smsStatusEl.style.borderColor = '#A7F3D0';
+      smsStatusEl.style.color = '#065F46';
+      smsStatusEl.innerHTML = `<i class="bi bi-check-circle-fill text-success" style="font-size: 1.05rem;"></i> <span>Confirmation SMS sent to <strong>${phoneRaw}</strong>!</span>`;
+    } else {
+      smsStatusEl.style.background = '#EFF6FF';
+      smsStatusEl.style.borderColor = '#BFDBFE';
+      smsStatusEl.style.color = '#1E40AF';
+      smsStatusEl.innerHTML = `<i class="bi bi-ticket-detailed-fill text-primary" style="font-size: 1.05rem;"></i> <span>Pass confirmed for <strong>${phoneRaw}</strong>. Please screenshot this pass.</span>`;
+    }
+  }).catch((err) => {
+    console.warn('Confirmation SMS failed to dispatch:', err);
+    if (!smsStatusEl) return;
+    smsStatusEl.style.background = '#EFF6FF';
+    smsStatusEl.style.borderColor = '#BFDBFE';
+    smsStatusEl.style.color = '#1E40AF';
+    smsStatusEl.innerHTML = `<i class="bi bi-ticket-detailed-fill text-primary" style="font-size: 1.05rem;"></i> <span>Pass confirmed for <strong>${phoneRaw}</strong>. Please screenshot this pass.</span>`;
+  });
 
   // Populate digital pass confirmation preview
   const passName = document.getElementById('pass-attendee-name');

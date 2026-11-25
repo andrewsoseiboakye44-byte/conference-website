@@ -12,12 +12,53 @@ import { formatPhoneNumber } from './utils.js';
 const GATEWAY_LOCAL_STORAGE_KEY = 'conf_active_sms_gateway_v1';
 
 /**
+ * Normalizes raw gateway record from any data source into a consistent shape.
+ */
+function normalizeGatewayData(raw, cached = null) {
+  if (!raw) return null;
+  let provider = (raw.provider || '').toLowerCase().trim();
+  const endpoint = (raw.endpoint_url || '').trim();
+
+  if (endpoint.startsWith('provider:')) {
+    provider = endpoint.slice(9).toLowerCase().trim();
+  } else if (cached?.provider && cached.provider !== 'custom') {
+    provider = cached.provider.toLowerCase().trim();
+  }
+
+  if ((!provider || provider === 'custom') && (!endpoint || !endpoint.startsWith('http'))) {
+    provider = 'mnotify';
+  }
+
+  const realEndpoint = (cached?.endpoint_url && cached.endpoint_url.startsWith('http'))
+    ? cached.endpoint_url
+    : (endpoint.startsWith('http') ? endpoint : null);
+
+  const apiKey = (raw.api_key || raw.api_key_encrypted || cached?.api_key || '').trim();
+  const apiSecret = (raw.api_secret || raw.api_secret_encrypted || cached?.api_secret || '').trim();
+  const senderId = (raw.sender_id || cached?.sender_id || 'CONFERENCE').trim();
+
+  return {
+    ...raw,
+    provider,
+    api_key: apiKey,
+    api_secret: apiSecret,
+    endpoint_url: realEndpoint,
+    sender_id: senderId,
+  };
+}
+
+/**
  * Retrieves the currently active SMS gateway settings.
- * Reads from Supabase sms_gateway_settings with local fallback cache.
+ * Resilient multi-tier lookup:
+ * 1. Supabase sms_gateway_settings table (admin or public select after migration 015)
+ * 2. Supabase RPC get_active_sms_gateway_for_dispatch (security definer)
+ * 3. Public conference_settings daily_time.sms_gateway (accessible to all public attendees)
+ * 4. Local browser storage cache fallback
  */
 export async function getActiveGateway() {
   const cached = getLocalGatewayConfig();
 
+  // Tier 1: Query sms_gateway_settings table directly
   try {
     const { data, error } = await supabase
       .from('sms_gateway_settings')
@@ -26,51 +67,75 @@ export async function getActiveGateway() {
       .limit(1)
       .maybeSingle();
 
-    if (!error && data) {
-      // Determine real provider: don't let a 'custom' fallback override the real provider (mnotify, arkesel, etc.)
-      let provider = (data.provider || '').toLowerCase().trim();
-
-      // Check if provider was encoded in endpoint_url (e.g. 'provider:mnotify')
-      if (data.endpoint_url && data.endpoint_url.startsWith('provider:')) {
-        provider = data.endpoint_url.slice(9).toLowerCase().trim();
-      } else if (cached && cached.provider && cached.provider !== 'custom') {
-        provider = cached.provider.toLowerCase().trim();
+    if (!error && data && (data.api_key_encrypted || data.api_key)) {
+      const gw = normalizeGatewayData(data, cached);
+      if (gw.api_key) {
+        saveLocalGatewayConfig(gw);
+        return gw;
       }
-
-      // If still custom and has no HTTP endpoint URL, default to mnotify (Ghana standard default)
-      if ((!provider || provider === 'custom') && (!data.endpoint_url || !data.endpoint_url.startsWith('http'))) {
-        provider = 'mnotify';
-      }
-
-      const realEndpoint = (cached?.endpoint_url && cached.endpoint_url.startsWith('http'))
-        ? cached.endpoint_url
-        : (data.endpoint_url && data.endpoint_url.startsWith('http') ? data.endpoint_url : null);
-
-      return {
-        ...data,
-        provider,
-        api_key: cached?.api_key || data.api_key_encrypted,
-        api_secret: cached?.api_secret || data.api_secret_encrypted,
-        endpoint_url: realEndpoint,
-        sender_id: cached?.sender_id || data.sender_id || 'CONFERENCE',
-      };
     }
   } catch (err) {
-    console.warn('Could not query sms_gateway_settings from Supabase, checking local cache:', err);
+    console.warn('sms_gateway_settings query note:', err);
   }
 
-  if (cached) {
-    let p = (cached.provider || 'mnotify').toLowerCase().trim();
-    if (cached.endpoint_url && cached.endpoint_url.startsWith('provider:')) {
-      p = cached.endpoint_url.slice(9).toLowerCase().trim();
-    } else if (p === 'custom' && (!cached.endpoint_url || !cached.endpoint_url.startsWith('http'))) {
-      p = 'mnotify';
+  // Tier 2: Query security definer RPC function
+  try {
+    const { data: rpcData, error: rpcError } = await supabase.rpc('get_active_sms_gateway_for_dispatch');
+    if (!rpcError && rpcData) {
+      const parsedRpc = typeof rpcData === 'string' ? JSON.parse(rpcData) : rpcData;
+      if (parsedRpc?.api_key || parsedRpc?.api_key_encrypted) {
+        const gw = normalizeGatewayData(parsedRpc, cached);
+        if (gw.api_key) {
+          saveLocalGatewayConfig(gw);
+          return gw;
+        }
+      }
     }
-    return {
-      ...cached,
-      provider: p,
-      endpoint_url: (cached.endpoint_url && cached.endpoint_url.startsWith('http')) ? cached.endpoint_url : null,
-    };
+  } catch (rpcErr) {
+    // RPC may not exist if migration 015 has not been executed yet
+  }
+
+  // Tier 3: Query public conference_settings (daily_time.sms_gateway)
+  // This is 100% readable by all anonymous visitors on index.html
+  try {
+    const { data: confData, error: confError } = await supabase
+      .from('conference_settings')
+      .select('daily_time')
+      .limit(1)
+      .maybeSingle();
+
+    if (!confError && confData?.daily_time) {
+      let parsedTime = {};
+      try {
+        parsedTime = typeof confData.daily_time === 'string'
+          ? JSON.parse(confData.daily_time)
+          : confData.daily_time;
+      } catch {}
+
+      const syncGw = parsedTime?.sms_gateway;
+      if (syncGw && (syncGw.api_key || syncGw.api_key_encrypted)) {
+        const gw = normalizeGatewayData({
+          provider: syncGw.provider,
+          sender_id: syncGw.sender_id,
+          api_key: syncGw.api_key || syncGw.api_key_encrypted,
+          api_secret: syncGw.api_secret || syncGw.api_secret_encrypted,
+          endpoint_url: syncGw.endpoint_url,
+          is_active: true,
+        }, cached);
+
+        if (gw.api_key) {
+          saveLocalGatewayConfig(gw);
+          return gw;
+        }
+      }
+    }
+  } catch (confErr) {
+    console.warn('conference_settings gateway check note:', confErr);
+  }
+
+  // Tier 4: Browser localStorage cache fallback
+  if (cached && cached.api_key) {
+    return normalizeGatewayData(cached, null);
   }
 
   return null;
@@ -299,15 +364,29 @@ export async function dispatchDirectSms({
   campaignType = 'manual_send',
   action = 'send',
 }) {
-  const gw = gateway || await getActiveGateway();
-  if (!gw || !gw.api_key) {
-    return {
-      status: 'failed',
-      errorMessage: 'No active SMS gateway configured. Please save your API Key and Sender ID in SMS Gateway settings.',
-    };
-  }
-
   const normalizedPhone = formatPhoneNumber(phone);
+  const gw = gateway || await getActiveGateway();
+
+  if (!gw || !gw.api_key) {
+    // If client browser does not have direct access to gateway credentials,
+    // forward to backend proxy (Vercel / Netlify / PHP) which resolves gateway server-side
+    try {
+      await callServerProxy({
+        action,
+        phone: normalizedPhone,
+        message,
+        gateway: null,
+        campaign_type: campaignType,
+      });
+      return { status: 'sent', errorMessage: null };
+    } catch (proxyErr) {
+      console.warn('Backend proxy dispatch error:', proxyErr);
+      return {
+        status: 'failed',
+        errorMessage: proxyErr.message || 'No active SMS gateway configured. Please check SMS settings.',
+      };
+    }
+  }
 
   let provider = (gw.provider || '').toLowerCase().trim();
   if (gw.endpoint_url && gw.endpoint_url.startsWith('provider:')) {
@@ -433,14 +512,27 @@ export async function sendTestSms(phone, gatewayOverride = null) {
 export async function sendRegistrationConfirmationSms({ fullName, phone, registrantId = null }) {
   if (!phone) return { status: 'failed', errorMessage: 'No phone number provided' };
 
-  // Fetch conference title from settings if available
+  // Fetch conference title and venue from settings if available
   let confName = 'the Annual Conference';
+  let venue = '';
   try {
-    const { data } = await supabase.from('conference_settings').select('conference_name').limit(1).maybeSingle();
-    if (data?.conference_name) confName = data.conference_name;
+    const { data } = await supabase
+      .from('conference_settings')
+      .select('conference_name, venue')
+      .limit(1)
+      .maybeSingle();
+    if (data?.conference_name) confName = data.conference_name.trim();
+    if (data?.venue) venue = data.venue.trim();
   } catch {}
 
-  const msg = `Hi ${fullName || 'there'}, your registration for ${confName} is confirmed! We look forward to seeing you.`;
+  const cleanName = (fullName || 'there').trim();
+  const cleanVenue = venue ? (venue.length > 40 ? venue.slice(0, 37) + '…' : venue) : '';
+
+  let msg = `Hi ${cleanName}, your registration for ${confName} is confirmed!`;
+  if (cleanVenue) {
+    msg += ` Venue: ${cleanVenue}.`;
+  }
+  msg += ` Present your name or pass at the entrance. See you there!`;
 
   return dispatchDirectSms({
     phone,

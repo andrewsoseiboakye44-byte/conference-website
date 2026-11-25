@@ -6,6 +6,8 @@
 
 import { supabase } from '../config.js';
 import { formatTime, escapeHtml } from '../utils.js';
+import { getActiveGateway } from '../sms.js';
+import { syncGatewayToPublicSettings } from './gateway.js';
 
 let realtimeChannel = null;
 let resizeHandlerAttached = false;
@@ -50,6 +52,12 @@ export async function initDashboard() {
 
   await refreshAll(true);
   subscribeRealtime();
+
+  // Background sync: ensure active SMS gateway is synchronized to public settings
+  // so any attendee registering via forwarded links or public portal gets confirmation SMS
+  getActiveGateway().then((gw) => {
+    if (gw) syncGatewayToPublicSettings(gw).catch(() => {});
+  }).catch(() => {});
 }
 
 async function refreshAll(showSkeletons = false) {

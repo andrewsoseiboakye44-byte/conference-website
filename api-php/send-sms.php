@@ -42,9 +42,82 @@ if (!$phone) {
     exit;
 }
 
+function fetchActiveGatewayFromSupabase() {
+    $supabaseUrl = 'https://rhdqrocagrkogbztwpmg.supabase.co';
+    $anonKey = 'sb_publishable_rmQ97GXrUaGcsGIIFrdUeg_zj_5gfeI';
+
+    // Tier 1: Try reading from conference_settings (daily_time.sms_gateway)
+    $ch = curl_init("{$supabaseUrl}/rest/v1/conference_settings?select=daily_time&limit=1");
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        "apikey: {$anonKey}",
+        "Authorization: Bearer {$anonKey}"
+    ]);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 6);
+    $response = curl_exec($ch);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($code === 200 && $response) {
+        $list = json_decode($response, true);
+        $rawTime = $list[0]['daily_time'] ?? null;
+        if ($rawTime) {
+            $parsed = is_string($rawTime) ? json_decode($rawTime, true) : $rawTime;
+            $syncGw = $parsed['sms_gateway'] ?? null;
+            if ($syncGw && !empty($syncGw['api_key'])) {
+                return [
+                    'provider' => $syncGw['provider'] ?? 'mnotify',
+                    'sender_id' => $syncGw['sender_id'] ?? 'CONFERENCE',
+                    'api_key' => $syncGw['api_key'] ?? '',
+                    'api_secret' => $syncGw['api_secret'] ?? '',
+                    'endpoint_url' => $syncGw['endpoint_url'] ?? null,
+                ];
+            }
+        }
+    }
+
+    // Tier 2: Try reading directly from sms_gateway_settings
+    $ch2 = curl_init("{$supabaseUrl}/rest/v1/sms_gateway_settings?is_active=eq.true&limit=1");
+    curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch2, CURLOPT_HTTPHEADER, [
+        "apikey: {$anonKey}",
+        "Authorization: Bearer {$anonKey}"
+    ]);
+    curl_setopt($ch2, CURLOPT_TIMEOUT, 6);
+    $response2 = curl_exec($ch2);
+    $code2 = curl_getinfo($ch2, CURLINFO_HTTP_CODE);
+    curl_close($ch2);
+
+    if ($code2 === 200 && $response2) {
+        $list2 = json_decode($response2, true);
+        if (!empty($list2) && (!empty($list2[0]['api_key_encrypted']) || !empty($list2[0]['api_key']))) {
+            $item = $list2[0];
+            $prov = strtolower(trim($item['provider'] ?? 'mnotify'));
+            $endp = trim($item['endpoint_url'] ?? '');
+            if (strpos($endp, 'provider:') === 0) {
+                $prov = strtolower(trim(substr($endp, 9)));
+                $endp = '';
+            }
+            return [
+                'provider' => $prov,
+                'sender_id' => $item['sender_id'] ?? 'CONFERENCE',
+                'api_key' => $item['api_key_encrypted'] ?? $item['api_key'] ?? '',
+                'api_secret' => $item['api_secret_encrypted'] ?? $item['api_secret'] ?? '',
+                'endpoint_url' => (strpos($endp, 'http') === 0) ? $endp : null,
+            ];
+        }
+    }
+
+    return null;
+}
+
+if (!$gateway || empty($gateway['api_key'])) {
+    $gateway = fetchActiveGatewayFromSupabase();
+}
+
 if (!$gateway || empty($gateway['api_key'])) {
     http_response_code(400);
-    echo json_encode(['error' => 'No SMS gateway credentials provided. Please save your API key.']);
+    echo json_encode(['error' => 'No SMS gateway credentials configured. Please check SMS settings.']);
     exit;
 }
 
