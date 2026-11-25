@@ -1,29 +1,34 @@
 -- ============================================================
 -- Migration 015: sms_gateway_public_dispatch
--- 1. Allows reading active SMS gateway settings for auto-confirmation
+-- 1. Adds endpoint_url column if not present in sms_gateway_settings.
+-- 2. Allows reading active SMS gateway settings for auto-confirmation
 --    SMS dispatch (by public attendees registering via forwarded links,
 --    QR codes, direct portal visits, and serverless proxy dispatch).
--- 2. Allows inserting into sms_logs for campaign_type = 'auto_confirmation'
+-- 3. Allows inserting into sms_logs for campaign_type = 'auto_confirmation'
 --    so public registrations can record their dispatch audit trail.
--- 3. Adds an RPC function get_active_sms_gateway_for_dispatch() with
+-- 4. Adds an RPC function get_active_sms_gateway_for_dispatch() with
 --    SECURITY DEFINER to reliably retrieve active gateway details.
 -- ============================================================
 
--- 1. Allow public reading of active gateway for dispatch
+-- 1. Ensure optional endpoint_url column exists
+alter table public.sms_gateway_settings 
+  add column if not exists endpoint_url text;
+
+-- 2. Allow public reading of active gateway for dispatch
 drop policy if exists "Allow reading active gateway for dispatch" on public.sms_gateway_settings;
 create policy "Allow reading active gateway for dispatch"
   on public.sms_gateway_settings
   for select
   using (is_active = true);
 
--- 2. Allow recording auto-confirmation SMS logs
+-- 3. Allow recording auto-confirmation SMS logs
 drop policy if exists "Allow recording auto_confirmation sms logs" on public.sms_logs;
 create policy "Allow recording auto_confirmation sms logs"
   on public.sms_logs
   for insert
   with check (campaign_type = 'auto_confirmation');
 
--- 3. Security definer function for direct RPC dispatch
+-- 4. Security definer function for direct RPC dispatch
 create or replace function public.get_active_sms_gateway_for_dispatch()
 returns json
 language plpgsql
@@ -44,8 +49,8 @@ begin
   end if;
 
   return json_build_object(
-    'provider', gw.provider,
-    'sender_id', gw.sender_id,
+    'provider', coalesce(gw.provider, 'mnotify'),
+    'sender_id', coalesce(gw.sender_id, 'GET-WISDOM'),
     'api_key', gw.api_key_encrypted,
     'api_secret', gw.api_secret_encrypted,
     'endpoint_url', gw.endpoint_url
