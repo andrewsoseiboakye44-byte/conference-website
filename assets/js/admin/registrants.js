@@ -98,20 +98,26 @@ async function loadTable() {
   data.forEach((r) => cachedRegistrants.set(r.id, r));
 
   tbody.innerHTML = data.map((r) => `
-    <tr data-id="${r.id}">
-      <td>
-        <strong class="view-registrant-link text-primary" data-id="${r.id}" style="cursor: pointer; text-decoration: underline dotted;" title="View attendee details">
-          ${escapeHtml(r.full_name)}
-        </strong>
+    <tr data-id="${r.id}" class="registrant-row">
+      <td class="reg-cell-name" data-label="Attendee Name">
+        <div class="reg-name-wrapper">
+          <strong class="view-registrant-link text-primary" data-id="${r.id}" style="cursor: pointer; text-decoration: underline dotted;" title="View attendee details">
+            ${escapeHtml(r.full_name)}
+          </strong>
+          <span class="badge mobile-only-status ${r.is_checked_in ? 'badge--yes' : 'badge--no'}">
+            <i class="bi ${r.is_checked_in ? 'bi-check-circle-fill' : 'bi-clock'}"></i>
+            ${r.is_checked_in ? 'Checked in' : 'Not yet'}
+          </span>
+        </div>
       </td>
-      <td><span class="badge" style="text-transform: capitalize;">${escapeHtml(r.category)}</span></td>
-      <td><a href="tel:${escapeHtml(r.contact_phone)}" style="color: inherit; text-decoration: none; font-family: monospace;">${escapeHtml(r.contact_phone)}</a></td>
-      <td>${escapeHtml(r.location ?? '—')}</td>
-      <td>${escapeHtml(r.invited_by ?? '—')}</td>
-      <td>${r.is_first_time ? '<span class="badge badge--yes">Yes</span>' : '—'}</td>
-      <td><span class="badge ${r.is_checked_in ? 'badge--yes' : 'badge--no'}">${r.is_checked_in ? 'Checked in' : 'Not yet'}</span></td>
-      <td>
-        <div class="d-flex align-items-center gap-1" style="flex-wrap: nowrap;">
+      <td class="reg-cell-category" data-label="Category"><span class="badge" style="text-transform: capitalize;">${escapeHtml(r.category)}</span></td>
+      <td class="reg-cell-phone" data-label="Phone"><a href="tel:${escapeHtml(r.contact_phone)}" style="color: inherit; text-decoration: none; font-family: monospace;">${escapeHtml(r.contact_phone)}</a></td>
+      <td class="reg-cell-location" data-label="Location">${escapeHtml(r.location ?? '—')}</td>
+      <td class="reg-cell-invited" data-label="Invited By">${escapeHtml(r.invited_by ?? '—')}</td>
+      <td class="reg-cell-firsttime" data-label="First-time">${r.is_first_time ? '<span class="badge badge--yes">Yes</span>' : '—'}</td>
+      <td class="reg-cell-status" data-label="Attendance Status"><span class="badge ${r.is_checked_in ? 'badge--yes' : 'badge--no'}">${r.is_checked_in ? 'Checked in' : 'Not yet'}</span></td>
+      <td class="reg-cell-actions" data-label="Actions">
+        <div class="d-flex align-items-center gap-1 reg-actions-container" style="flex-wrap: nowrap;">
           <button class="btn btn--outline btn--sm toggle-checkin" data-id="${r.id}" data-checked="${r.is_checked_in}" title="${r.is_checked_in ? 'Undo attendance check-in' : 'Mark as checked in'}" style="padding: 4px 10px; font-size: 0.78rem; white-space: nowrap;">
             <i class="bi ${r.is_checked_in ? 'bi-arrow-counterclockwise' : 'bi-check2'}"></i>
             <span>${r.is_checked_in ? 'Undo' : 'Check in'}</span>
@@ -168,7 +174,7 @@ function showRegistrantDetails(id) {
       <p style="margin: 0; color: #64748B; font-size: 0.82rem;">Registered on ${regDate} via <strong>${escapeHtml(r.registered_via || 'public')}</strong></p>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px;">
+    <div class="reg-details-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px;">
       <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 10px 12px;">
         <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: #64748B; display: block; margin-bottom: 2px;">Contact Phone</span>
         <a href="tel:${escapeHtml(r.contact_phone)}" style="font-size: 0.95rem; font-weight: 700; color: #2563EB; text-decoration: none; font-family: monospace;">

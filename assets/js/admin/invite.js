@@ -815,19 +815,24 @@ function renderContactsTable() {
     const isSent = Boolean(c.sms_sent);
 
     return `
-      <tr>
-        <td style="font-family: monospace; color: #2563EB; font-weight: 700; font-size: 0.92rem;">
-          ${escapeHtml(c.contact_phone)}
+      <tr class="contact-card-row">
+        <td class="contact-cell-phone" data-label="Phone" style="font-family: monospace; color: #2563EB; font-weight: 700; font-size: 0.92rem;">
+          <div class="contact-header-mobile">
+            <span>${escapeHtml(c.contact_phone)}</span>
+            <span class="badge contact-mobile-badge" style="background: ${isConverted ? '#EFF6FF' : '#F8FAFC'}; color: ${isConverted ? '#2563EB' : '#64748B'}; font-size: 0.78rem;">
+              ${isConverted ? 'Registered' : 'Not yet'}
+            </span>
+          </div>
         </td>
-        <td>
+        <td class="contact-cell-name" data-label="Name">
           ${c.contact_name ? `<strong>${escapeHtml(c.contact_name)}</strong>` : '<span style="color: #94A3B8; font-style: italic;">No name provided</span>'}
         </td>
-        <td>
+        <td class="contact-cell-batch" data-label="Batch">
           <span class="badge" style="background: #F1F5F9; color: #475569; font-size: 0.78rem;">
             ${escapeHtml(c.batch_label || 'Direct')}
           </span>
         </td>
-        <td>
+        <td class="contact-cell-sms" data-label="SMS Status">
           ${isSent ? `
             <span class="badge" style="background: #ECFDF5; color: #047857; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
               <i class="bi bi-check-circle-fill"></i> Sent
@@ -838,7 +843,7 @@ function renderContactsTable() {
             </span>
           `}
         </td>
-        <td>
+        <td class="contact-cell-conv" data-label="Registration">
           ${isConverted ? `
             <span class="badge" style="background: #EFF6FF; color: #2563EB; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
               <i class="bi bi-person-check-fill"></i> Registered
@@ -849,16 +854,16 @@ function renderContactsTable() {
             </span>
           `}
         </td>
-        <td style="font-size: 0.82rem; color: #64748B;">
+        <td class="contact-cell-date" data-label="Added On" style="font-size: 0.82rem; color: #64748B;">
           ${c.created_at ? formatDate(c.created_at) : '—'}
         </td>
-        <td>
-          <div style="display: flex; gap: 6px; align-items: center;">
+        <td class="contact-cell-actions" data-label="Actions">
+          <div class="contact-actions-wrap" style="display: flex; gap: 6px; align-items: center;">
             <button type="button" class="btn btn--outline btn--sm invite-resend-btn" data-id="${c.id}" data-phone="${c.contact_phone}" data-name="${escapeHtml(c.contact_name || '')}" style="padding: 3px 8px; font-size: 0.76rem;" title="Send SMS invitation">
-              <i class="bi bi-send text-primary"></i> ${isSent ? 'Resend' : 'Send'}
+              <i class="bi bi-send text-primary"></i> <span>${isSent ? 'Resend' : 'Send'}</span>
             </button>
             <button type="button" class="btn btn--ghost btn--sm invite-delete-btn" data-id="${c.id}" style="padding: 3px 6px; font-size: 0.76rem; color: #DC2626;" title="Remove contact">
-              <i class="bi bi-trash3"></i>
+              <i class="bi bi-trash3"></i> <span>Delete</span>
             </button>
           </div>
         </td>

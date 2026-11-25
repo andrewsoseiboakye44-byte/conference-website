@@ -104,19 +104,19 @@ async function loadUshers() {
   }
 
   tbody.innerHTML = data.map((u) => `
-    <tr>
-      <td style="font-weight: 700; color: #0F172A;">
+    <tr class="usher-card-row">
+      <td class="usher-cell-name" data-label="Usher Account" style="font-weight: 700; color: #0F172A;">
         <i class="bi bi-person-badge text-primary me-1"></i> ${escapeHtml(u.username)}
       </td>
-      <td>
+      <td class="usher-cell-status" data-label="Status">
         <span class="badge ${u.is_active ? 'badge--yes' : 'badge--no'}">
           <i class="bi ${u.is_active ? 'bi-check-circle-fill' : 'bi-x-circle-fill'}"></i>
           ${u.is_active ? 'Active' : 'Disabled'}
         </span>
       </td>
-      <td style="color: #64748B; font-size: 0.85rem;">${formatDate(u.created_at)}</td>
-      <td>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <td class="usher-cell-created" data-label="Created On" style="color: #64748B; font-size: 0.85rem;">${formatDate(u.created_at)}</td>
+      <td class="usher-cell-actions" data-label="Actions">
+        <div class="usher-actions-wrap" style="display: flex; gap: 8px; flex-wrap: wrap;">
           <button class="btn btn--outline btn--sm" data-toggle="${u.id}" data-active="${u.is_active}" title="Toggle active status">
             ${u.is_active ? '<i class="bi bi-pause-circle"></i> Disable' : '<i class="bi bi-play-circle"></i> Enable'}
           </button>
