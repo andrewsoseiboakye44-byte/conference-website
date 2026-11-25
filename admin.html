@@ -7,8 +7,8 @@
   <link rel="icon" type="image/png" href="./favicon.png" />
   <link rel="apple-touch-icon" href="./assets/images/logo.png" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-  <link rel="stylesheet" href="./assets/css/base.css?v=3.2" />
-  <link rel="stylesheet" href="./assets/css/admin.css?v=3.2" />
+  <link rel="stylesheet" href="./assets/css/base.css?v=3.5" />
+  <link rel="stylesheet" href="./assets/css/admin.css?v=3.5" />
 </head>
 <body class="admin-body">
   <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -52,8 +52,13 @@
     <!-- ============ Sidebar ============ -->
     <aside class="admin-sidebar" id="admin-sidebar" role="navigation" aria-label="Admin Navigation">
       <div class="admin-sidebar__brand">
-        <img src="./assets/images/logo.png" alt="GWC Logo" class="admin-sidebar__logo-img" />
-        <span>GET-WISDOM Admin</span>
+        <div class="admin-sidebar__brand-main">
+          <img src="./assets/images/logo.png" alt="GWC Logo" class="admin-sidebar__logo-img" />
+          <span>GET-WISDOM Admin</span>
+        </div>
+        <button type="button" class="admin-sidebar__close-btn" id="sidebar-close-btn" aria-label="Close navigation menu">
+          <i class="bi bi-x-lg"></i>
+        </button>
       </div>
       <nav class="admin-nav">
         <button class="admin-nav__item admin-nav__item--active" data-view="dashboard" aria-current="page">
@@ -100,17 +105,28 @@
     </aside>
 
     <!-- ============ Mobile Top App Bar ============ -->
-    <div class="admin-mobilebar">
-      <div class="d-flex align-items-center gap-2">
-        <button id="mobile-menu-btn" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="admin-sidebar">
+    <header class="admin-mobilebar">
+      <div class="admin-mobilebar__left">
+        <button id="mobile-menu-btn" class="admin-mobilebar__btn admin-mobilebar__btn--menu" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="admin-sidebar">
           <i class="bi bi-list"></i>
         </button>
-        <span id="mobile-title" style="font-weight: 700;">Dashboard</span>
+        <div class="admin-mobilebar__brand">
+          <img src="./assets/images/logo.png" alt="GWC Logo" class="admin-mobilebar__logo" />
+          <div class="admin-mobilebar__titles">
+            <span class="admin-mobilebar__app-name">GWC Admin</span>
+            <span id="mobile-title" class="admin-mobilebar__view-title">Dashboard</span>
+          </div>
+        </div>
       </div>
-      <a href="./index.html" target="_blank" rel="noopener" class="btn btn--outline btn--sm" style="color: #FFFFFF; border-color: rgba(255,255,255,0.2);" title="Open Public Registration Site">
-        <i class="bi bi-box-arrow-up-right"></i>
-      </a>
-    </div>
+      <div class="admin-mobilebar__right">
+        <button type="button" class="admin-mobilebar__btn" id="mobile-refresh-btn" title="Refresh data">
+          <i class="bi bi-arrow-clockwise"></i>
+        </button>
+        <a href="./index.html" target="_blank" rel="noopener" class="admin-mobilebar__btn" title="View Public Registration Portal">
+          <i class="bi bi-box-arrow-up-right"></i>
+        </a>
+      </div>
+    </header>
 
     <!-- ============ Main Content ============ -->
     <main class="admin-main" id="main-content" role="main">
@@ -1085,6 +1101,30 @@
       </footer>
 
     </main>
+
+    <!-- ============ Modern Mobile Bottom Navigation Bar ============ -->
+    <nav class="admin-bottom-nav" id="admin-bottom-nav" aria-label="Mobile Bottom Navigation">
+      <button class="admin-bottom-nav__item admin-bottom-nav__item--active" data-view="dashboard">
+        <i class="bi bi-speedometer2"></i>
+        <span>Overview</span>
+      </button>
+      <button class="admin-bottom-nav__item" data-view="registrants">
+        <i class="bi bi-people-fill"></i>
+        <span>Attendees</span>
+      </button>
+      <button class="admin-bottom-nav__item" data-view="invite">
+        <i class="bi bi-envelope-paper-heart-fill"></i>
+        <span>Invite</span>
+      </button>
+      <button class="admin-bottom-nav__item" data-view="campaigns">
+        <i class="bi bi-chat-left-dots-fill"></i>
+        <span>SMS</span>
+      </button>
+      <button class="admin-bottom-nav__item" id="bottom-nav-more-btn" data-action="toggle-menu">
+        <i class="bi bi-grid-fill"></i>
+        <span>More</span>
+      </button>
+    </nav>
   </div>
 
   <!-- ============ Modals ============ -->
@@ -1459,6 +1499,6 @@
     </div>
   </dialog>
 
-  <script type="module" src="./assets/js/admin/main.js?v=3.4"></script>
+  <script type="module" src="./assets/js/admin/main.js?v=3.5"></script>
 </body>
 </html>

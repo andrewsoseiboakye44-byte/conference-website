@@ -156,7 +156,7 @@ function populateAdminHeader(profile) {
 }
 
 function bindNavigation() {
-  document.querySelectorAll('.admin-nav__item[data-view]').forEach((btn) => {
+  document.querySelectorAll('.admin-nav__item[data-view], .admin-bottom-nav__item[data-view]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const view = btn.dataset.view;
       if (view) {
@@ -171,6 +171,9 @@ function setupMobileDrawer() {
   const sidebar = document.getElementById('admin-sidebar') || document.querySelector('.admin-sidebar');
   const backdrop = document.getElementById('sidebar-backdrop');
   const menuBtn = document.getElementById('mobile-menu-btn');
+  const closeBtn = document.getElementById('sidebar-close-btn');
+  const moreBtn = document.getElementById('bottom-nav-more-btn');
+  const refreshBtn = document.getElementById('mobile-refresh-btn');
 
   const openDrawer = () => {
     sidebar?.classList.add('admin-sidebar--open');
@@ -191,6 +194,35 @@ function setupMobileDrawer() {
     const isOpen = sidebar?.classList.contains('admin-sidebar--open');
     if (isOpen) closeDrawer();
     else openDrawer();
+  });
+
+  closeBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeDrawer();
+  });
+
+  moreBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = sidebar?.classList.contains('admin-sidebar--open');
+    if (isOpen) closeDrawer();
+    else openDrawer();
+  });
+
+  refreshBtn?.addEventListener('click', async () => {
+    const icon = refreshBtn.querySelector('i');
+    icon?.classList.add('spin-animation');
+    const currentView = getInitialView();
+    try {
+      if (currentView === 'dashboard') {
+        const dashRefresh = document.getElementById('refresh-dashboard-btn');
+        if (dashRefresh) dashRefresh.click();
+        else await moduleInitializers.dashboard?.();
+      } else {
+        await switchView(currentView);
+      }
+    } finally {
+      setTimeout(() => icon?.classList.remove('spin-animation'), 600);
+    }
   });
 
   backdrop?.addEventListener('click', closeDrawer);
@@ -246,6 +278,14 @@ async function switchView(view) {
       b.removeAttribute('aria-current');
     }
   });
+
+  // Update mobile bottom navigation bar active states
+  document.querySelectorAll('.admin-bottom-nav__item[data-view]').forEach((b) => {
+    const isActive = b.dataset.view === view;
+    b.classList.toggle('admin-bottom-nav__item--active', isActive);
+  });
+  const isBottomTab = ['dashboard', 'registrants', 'invite', 'campaigns'].includes(view);
+  document.getElementById('bottom-nav-more-btn')?.classList.toggle('admin-bottom-nav__item--active', !isBottomTab);
 
   // Toggle active view panel
   document.querySelectorAll('.admin-view').forEach((section) => {
